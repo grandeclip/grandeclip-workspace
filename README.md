@@ -1,9 +1,20 @@
+<p align="center">
+  <img src="assets/grandeclip.png" alt="grande clip" width="440">
+</p>
+
+<h1 align="center">세계인의 일상에 한국을~</h1>
+
+<p align="center">
+  <b>K to Global</b> &nbsp;·&nbsp; BEAUTY &nbsp;|&nbsp; F&amp;B &nbsp;|&nbsp; SOUVENIR
+</p>
+
+<p align="center"><i>사소한 것을 위대하게</i></p>
+
+---
+
 # grandeclip 워크스페이스
 
 > 전 임직원을 위한 AI 기반 업무 워크스페이스
-> Claude Code + Johnny Decimal 파일 체계
-
-이 워크스페이스는 신입/전임직원이 Claude Code로 업무를 정리하고 실습하기 위한 **시작 템플릿**입니다. 각자 자신의 로컬에 복사해 개인 워크스페이스로 사용하세요.
 
 ---
 
@@ -29,64 +40,6 @@
 
 ### 5. 보안 가이드 확인 (필독)
 `00-system/03-guides/AI-보안-가이드.md`를 반드시 한 번 읽어주세요.
-
----
-
-## 📁 폴더 구조 (Johnny Decimal)
-
-```
-00-inbox/       - 빠른 캡처 (임시 보관, 주기적으로 비우기)
-00-system/      - 템플릿, 가이드, 시스템 문서
-10-projects/    - 활성 프로젝트 (시한부, 완료 시 90-archive로)
-20-operations/  - 지속적 운영 업무
-30-knowledge/   - 검증된 지식 아카이브
-40-personal/    - Daily Note, Weekly Review, 아이디어, Todos
-50-resources/   - 참고 자료 (PDF, 데이터 등)
-90-archive/     - 완료/중단 항목
-```
-
-**네이밍 규칙**: `[숫자]-[설명적-이름]` (예: `11-website-redesign`)
-
----
-
-## ⌨️ 커맨드
-
-| 커맨드 | 용도 |
-|--------|------|
-| `/setup-workspace` | 대화형 개인 CLAUDE.md 생성 + 초기 설정 |
-| `/daily-note` | 오늘 Daily Note 생성/열기 |
-| `/todo`, `/todos` | 할 일 추가 / 목록 관리 |
-| `/thinking-partner` | 생각 정리 파트너 (소크라테스식 질문) |
-| `/idea` | 대화에서 아이디어 추출·저장 |
-| `/create-command` | 나만의 커스텀 커맨드 생성 |
-
----
-
-## 🧩 스킬 & 에이전트 (내장, 바로 사용)
-
-`.claude/skills/`, `.claude/agents/`에 다음이 포함되어 있습니다:
-
-- **skill-creator / subagent-creator / slash-command-creator / hook-creator** — 나만의 스킬·에이전트·커맨드·훅을 직접 제작
-- **brand-guidelines / canvas-design / internal-comms** — 브랜드 일관성, 디자인, 사내 커뮤니케이션 문서
-- **zettelkasten-linker** (에이전트) — 쌓인 노트를 정리·연결하고 볼트 건강 리포트 생성
-
----
-
-## 🔌 플러그인 (설치 승인 후 사용)
-
-`.claude/settings.json`에 사전 연결되어 있어, 최초 승인만 하면 활성화됩니다:
-
-- **superpowers** — 기획(brainstorming)·계획·TDD·디버깅 등 작업 워크플로우
-- **harness** — 도메인 설명만으로 에이전트 팀·스킬을 자동 생성
-- **humanize-korean** — AI가 쓴 한글 티를 자연스럽게 다듬는 윤문
-- **security-guidance** — 코드 보안 자동 리뷰 (개발 작업 시)
-- **업무 번들(Cowork)** — product-management · marketing · sales · customer-support · design · data · engineering · productivity
-  - Notion·Slack·Figma 등 커넥터를 연결하면 실제 데이터까지 활용할 수 있습니다.
-
-### "언제 뭘 쓰나?" 빠른 가이드
-- **에이전트/스킬을 정밀하게 하나씩 만들 때** → `skill-creator` / `subagent-creator`
-- **여러 에이전트로 이뤄진 팀을 도메인 설명만으로 한 번에 만들 때** → `harness`
-- **글을 기획·설계할 때** → superpowers `brainstorming` / **한글 AI 티를 없앨 때** → `humanize-korean`
 
 ---
 
