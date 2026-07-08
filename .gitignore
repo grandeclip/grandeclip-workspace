@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# 개인 로컬 설정 (구성원별)
+.claude/settings.local.json
+
+# 임시/캐시
+*.tmp
+.pytest_cache/
+__pycache__/

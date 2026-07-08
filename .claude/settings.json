@@ -30,22 +30,5 @@
     "data@knowledge-work-plugins": true,
     "engineering@knowledge-work-plugins": true,
     "productivity@knowledge-work-plugins": true
-  },
-  "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "startup",
-        "hooks": [
-          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/security-context.sh" }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/security-scan.sh" }
-        ]
-      }
-    ]
   }
 }
