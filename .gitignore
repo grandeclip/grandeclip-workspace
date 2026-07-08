@@ -5,6 +5,12 @@
 .idea/
 .vscode/
 
+# Obsidian 개인 로컬 상태 (창 레이아웃 등) — 앱/플러그인 설정은 유지
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.trash/
+
 # 개인 로컬 설정 (구성원별)
 .claude/settings.local.json
 
