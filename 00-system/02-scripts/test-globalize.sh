@@ -33,5 +33,14 @@ out="$(CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" 2>&1)"
 echo "$out" | grep -qi "충돌"; check "$?" "0" "충돌로 보고됨"
 rm -rf "$H"
 
+echo "T2-d: 이전에 관리하던 이름을 사용자가 자기 파일로 교체 → 덮지 않고 충돌"
+H="$(newhome)"; CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1
+rm -f "$H/agents/zettelkasten-linker.md"
+printf 'USER OWNED\n' > "$H/agents/zettelkasten-linker.md"
+out="$(CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" 2>&1)"
+grep -q "USER OWNED" "$H/agents/zettelkasten-linker.md"; check "$?" "0" "사용자 파일 보존됨"
+echo "$out" | grep -qi "충돌"; check "$?" "0" "충돌로 보고됨"
+rm -rf "$H"
+
 echo "결과: pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]

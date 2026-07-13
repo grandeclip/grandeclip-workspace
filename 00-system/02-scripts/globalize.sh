@@ -13,17 +13,9 @@ managed_now=""   # 이번 실행에서 관리하는 "cat/name" 목록(개행 구
 
 mkdir -p "$DEST/skills" "$DEST/agents" "$DEST/commands"
 
-# 기존 매니페스트 로드(따옴표로 감싼 "cat/name" 추출)
-managed_prev=""
-if [ -f "$MANIFEST" ]; then
-  managed_prev="$(grep -o '"[^"]*"' "$MANIFEST" | tr -d '"' || true)"
-fi
-
-was_managed() { printf '%s\n' "$managed_prev" | grep -qxF "$1"; }
-
-# "우리 것" 판별: 매니페스트에 있거나, repo .claude 안을 가리키는 심볼릭 링크
+# "우리 것" 판별: repo .claude 안을 가리키는 "현재의" 심볼릭 링크일 때만 인정
+# (매니페스트에 과거 기록이 있어도, 사용자가 실파일/디렉터리로 교체했다면 더 이상 우리 것이 아님)
 is_ours() {  # $1=key(cat/name)  $2=destpath
-  was_managed "$1" && return 0
   if [ -L "$2" ]; then
     local t; t="$(readlink "$2")"
     case "$t" in "$SRC"/*) return 0;; esac
@@ -44,7 +36,7 @@ process_category() {  # $1 = skills|agents|commands
       ln -sfn "$path" "$dest"
       managed_now="$managed_now$key"$'\n'
       skipped=$((skipped+1))
-    elif [ -e "$dest" ]; then
+    elif [ -e "$dest" ] || [ -L "$dest" ]; then
       conflicts=$((conflicts+1))
       conflict_list="$conflict_list  - $key (이미 다른 내용이 있어 건너뜀)"$'\n'
     else
