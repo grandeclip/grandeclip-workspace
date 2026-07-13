@@ -42,5 +42,28 @@ grep -q "USER OWNED" "$H/agents/zettelkasten-linker.md"; check "$?" "0" "사용�
 echo "$out" | grep -qi "충돌"; check "$?" "0" "충돌로 보고됨"
 rm -rf "$H"
 
+echo "T3-a: CLAUDE.md 없을 때 — 관리 블록과 함께 생성"
+H="$(newhome)"; CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1
+[ -f "$H/CLAUDE.md" ]; check "$?" "0" "CLAUDE.md 생성됨"
+grep -q "GRANDECLIP:START" "$H/CLAUDE.md"; check "$?" "0" "시작 마커 존재"
+grep -q "보안 원칙" "$H/CLAUDE.md"; check "$?" "0" "보안 지침 주입됨"
+rm -rf "$H"
+
+echo "T3-b: 기존 개인 내용 보존 + 블록 추가"
+H="$(newhome)"; printf '# 내 개인 설정\n항상 존댓말.\n' > "$H/CLAUDE.md"
+CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1
+grep -q "항상 존댓말" "$H/CLAUDE.md"; check "$?" "0" "개인 내용 보존됨"
+grep -q "GRANDECLIP:START" "$H/CLAUDE.md"; check "$?" "0" "관리 블록 추가됨"
+rm -rf "$H"
+
+echo "T3-c: 재실행 시 블록 중복 없이 교체"
+H="$(newhome)"; printf '# 개인\n메모.\n' > "$H/CLAUDE.md"
+CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1
+CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1
+cnt="$(grep -c "GRANDECLIP:START" "$H/CLAUDE.md")"
+check "$cnt" "1" "시작 마커가 정확히 1개"
+grep -q "메모." "$H/CLAUDE.md"; check "$?" "0" "재실행 후에도 개인 내용 보존"
+rm -rf "$H"
+
 echo "결과: pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]

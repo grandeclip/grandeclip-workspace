@@ -51,6 +51,28 @@ process_category skills
 process_category agents
 process_category commands
 
+# 전역 CLAUDE.md 관리 블록 주입
+SECURITY_BLOCK="$REPO_ROOT/00-system/03-guides/global-security-block.md"
+CLAUDE_MD="$DEST/CLAUDE.md"
+START="<!-- GRANDECLIP:START -->"
+END="<!-- GRANDECLIP:END -->"
+if [ -f "$SECURITY_BLOCK" ]; then
+  tmp="$(mktemp)"
+  if [ -f "$CLAUDE_MD" ] && grep -qF "$START" "$CLAUDE_MD"; then
+    # 마커 사이 내용 교체
+    awk -v s="$START" -v e="$END" -v bf="$SECURITY_BLOCK" '
+      $0==s { print s; while ((getline line < bf) > 0) print line; close(bf); print e; skip=1; next }
+      $0==e { skip=0; next }
+      !skip { print }
+    ' "$CLAUDE_MD" > "$tmp"
+  else
+    # 마커 없음 → 개인 내용 뒤에 추가(파일 없으면 새로 생성)
+    { [ -f "$CLAUDE_MD" ] && cat "$CLAUDE_MD" && echo; echo "$START"; cat "$SECURITY_BLOCK"; echo "$END"; } > "$tmp"
+  fi
+  mv "$tmp" "$CLAUDE_MD"
+  echo "전역 보안 지침(CLAUDE.md) 갱신 완료"
+fi
+
 # 매니페스트 저장(JSON 배열)
 {
   echo "["
