@@ -57,20 +57,31 @@ CLAUDE_MD="$DEST/CLAUDE.md"
 START="<!-- GRANDECLIP:START -->"
 END="<!-- GRANDECLIP:END -->"
 if [ -f "$SECURITY_BLOCK" ]; then
-  tmp="$(mktemp)"
-  if [ -f "$CLAUDE_MD" ] && grep -qF "$START" "$CLAUDE_MD"; then
-    # 마커 사이 내용 교체
-    awk -v s="$START" -v e="$END" -v bf="$SECURITY_BLOCK" '
-      $0==s { print s; while ((getline line < bf) > 0) print line; close(bf); print e; skip=1; next }
-      $0==e { skip=0; next }
-      !skip { print }
-    ' "$CLAUDE_MD" > "$tmp"
-  else
-    # 마커 없음 → 개인 내용 뒤에 추가(파일 없으면 새로 생성)
-    { [ -f "$CLAUDE_MD" ] && cat "$CLAUDE_MD" && echo; echo "$START"; cat "$SECURITY_BLOCK"; echo "$END"; } > "$tmp"
+  # 마커 개수 확인(수동 훼손 방어): START/END가 각각 정확히 0쌍 또는 1쌍일 때만 자동 갱신
+  start_n=0; end_n=0
+  if [ -f "$CLAUDE_MD" ]; then
+    start_n=$(grep -cF "$START" "$CLAUDE_MD" || true)
+    end_n=$(grep -cF "$END" "$CLAUDE_MD" || true)
   fi
-  mv "$tmp" "$CLAUDE_MD"
-  echo "전역 보안 지침(CLAUDE.md) 갱신 완료"
+  if [ "$start_n" -gt 1 ] || [ "$end_n" -gt 1 ] || [ "$start_n" != "$end_n" ]; then
+    # 마커가 비정상(짝이 안 맞거나 중복) → 개인 내용 보호를 위해 건드리지 않음
+    echo "⚠️ 전역 CLAUDE.md의 GRANDECLIP 마커가 비정상입니다(START=$start_n, END=$end_n). 개인 내용 보호를 위해 보안 지침 자동 갱신을 건너뜁니다 — 수동 확인이 필요합니다: $CLAUDE_MD"
+  else
+    tmp="$(mktemp)"
+    if [ "$start_n" -eq 1 ]; then
+      # 정상 마커 1쌍 → 마커 사이 내용 교체
+      awk -v s="$START" -v e="$END" -v bf="$SECURITY_BLOCK" '
+        $0==s { print s; while ((getline line < bf) > 0) print line; close(bf); print e; skip=1; next }
+        $0==e { skip=0; next }
+        !skip { print }
+      ' "$CLAUDE_MD" > "$tmp"
+    else
+      # 마커 없음(0쌍) → 개인 내용 뒤에 추가(파일 없으면 새로 생성)
+      { [ -f "$CLAUDE_MD" ] && cat "$CLAUDE_MD" && echo; echo "$START"; cat "$SECURITY_BLOCK"; echo "$END"; } > "$tmp"
+    fi
+    mv "$tmp" "$CLAUDE_MD"
+    echo "전역 보안 지침(CLAUDE.md) 갱신 완료"
+  fi
 fi
 
 # 매니페스트 저장(JSON 배열)

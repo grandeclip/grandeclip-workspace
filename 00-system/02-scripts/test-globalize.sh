@@ -65,5 +65,12 @@ check "$cnt" "1" "시작 마커가 정확히 1개"
 grep -q "메모." "$H/CLAUDE.md"; check "$?" "0" "재실행 후에도 개인 내용 보존"
 rm -rf "$H"
 
+echo "T3-d: 마커가 비정상(짝 없는 START) → 자동 갱신 건너뛰고 개인 내용 보존"
+H="$(newhome)"; printf '# 개인\n<!-- GRANDECLIP:START -->\n(잘못된 상태)\n중요한 개인 메모\n' > "$H/CLAUDE.md"
+out="$(CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" 2>&1)"
+grep -q "중요한 개인 메모" "$H/CLAUDE.md"; check "$?" "0" "비정상 마커 시 개인 내용 보존"
+echo "$out" | grep -q "마커가 비정상"; check "$?" "0" "비정상 마커 경고 출력"
+rm -rf "$H"
+
 echo "결과: pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]
