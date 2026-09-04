@@ -104,7 +104,24 @@ if [ "$need_dev_tools" = "1" ]; then
   fi
 fi
 
-ok "준비 완료"
+# 폴더 무결성 — .claude 는 점으로 시작하는 숨김 폴더라 압축·드라이브 업로드·
+# 다운로드 과정에서 통째로 빠지는 사고가 잦다. 없으면 스킬은 정상적으로 받아지지만
+# /setup-workspace 를 비롯한 워크스페이스 커맨드가 전부 사라진다.
+# 설치 자체는 막지 않는다 — 플러그인은 사용자 전역에 설치되므로 폴더를 다시 받아도
+# 그대로 남고, 여기서 멈추면 기다린 시간만 버리게 된다.
+missing_commands=0
+if [ ! -f "$SCRIPT_DIR/.claude/commands/setup-workspace.md" ]; then
+  missing_commands=1
+  warn "워크스페이스 커맨드가 보이지 않습니다."
+  say ""
+  say "     .claude 폴더가 빠진 것 같습니다. 점으로 시작하는 폴더는 숨김 처리라"
+  say "     복사·압축·다운로드 과정에서 누락되는 일이 잦습니다."
+  say ""
+  say "     스킬 설치는 그대로 진행합니다(설치한 스킬은 이 폴더와 무관하게 남습니다)."
+  say "     다만 /setup-workspace 를 쓰려면 폴더를 다시 받아야 합니다."
+else
+  ok "준비 완료"
+fi
 
 # ── 2단계: Claude Code 설치 확인 ─────────────────────────────
 step "2/4  Claude Code 확인"
@@ -217,6 +234,11 @@ if [ "$miss_n" -eq 0 ]; then
   say ""
   say "  claude 명령을 못 찾으면 새 터미널을 열어 주세요."
   say ""
+  if [ "$missing_commands" = "1" ]; then
+    warn "다만 .claude 폴더가 빠져 있어 /setup-workspace 는 쓸 수 없습니다."
+    say "     공유받은 폴더를 다시 받아 주세요. 스킬은 이미 설치되어 그대로 남습니다."
+    say ""
+  fi
   exit 0
 else
   warn "설치됨 $found_n 개 · 누락 $miss_n 개"
