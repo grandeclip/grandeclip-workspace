@@ -35,6 +35,11 @@ function Bad  { param($m) Write-Host "  [X]  $m" -ForegroundColor Red }
 function Confirm-Step {
   param($Question)
   if ($Yes) { return $true }
+  # 비대화형(예: Claude Code 가 /setup-workspace 에서 대신 실행)이면 묻지 않고 진행한다.
+  # bash 쪽 confirm() 의 `[ -t 0 ] || return 0` 과 대칭을 맞춘 것.
+  # PowerShell 7 은 이 처리가 없어도 즉시 빠져나오지만, 실제 배포 대상인 5.1 은
+  # 검증할 수 없으므로 우연에 기대지 않고 명시한다.
+  try { if ([Console]::IsInputRedirected) { return $true } } catch { }
   $reply = Read-Host "$Question [Y/n]"
   if ($reply -match '^[nN]') { return $false }
   return $true
