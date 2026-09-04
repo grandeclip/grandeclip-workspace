@@ -1,4 +1,4 @@
-# grandeclip 전역 적용 (Windows) — 심볼릭 링크는 권한이 필요해 복사 사용.
+﻿# grandeclip 전역 적용 (Windows) — 심볼릭 링크는 권한이 필요해 복사 사용.
 # 주의: 이 스크립트는 Windows 실기에서 아직 검증되지 않았습니다(.sh 로직 미러).
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path

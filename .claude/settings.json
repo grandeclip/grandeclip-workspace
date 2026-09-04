@@ -2,33 +2,5 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  },
-  "extraKnownMarketplaces": {
-    "harness-marketplace": {
-      "source": { "source": "github", "repo": "revfactory/harness" },
-      "autoUpdate": true
-    },
-    "im-not-ai": {
-      "source": { "source": "github", "repo": "epoko77-ai/im-not-ai" },
-      "autoUpdate": true
-    },
-    "knowledge-work-plugins": {
-      "source": { "source": "github", "repo": "anthropics/knowledge-work-plugins" },
-      "autoUpdate": true
-    }
-  },
-  "enabledPlugins": {
-    "harness@harness-marketplace": true,
-    "superpowers@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "humanize-korean@im-not-ai": true,
-    "product-management@knowledge-work-plugins": true,
-    "marketing@knowledge-work-plugins": true,
-    "sales@knowledge-work-plugins": true,
-    "customer-support@knowledge-work-plugins": true,
-    "design@knowledge-work-plugins": true,
-    "data@knowledge-work-plugins": true,
-    "engineering@knowledge-work-plugins": true,
-    "productivity@knowledge-work-plugins": true
   }
 }
