@@ -1,0 +1,34 @@
+# grandeclip 워크스페이스 — 설치 대상 목록 (단일 원천 / SSOT)
+#
+# install.sh (macOS·Linux) 와 install.ps1 (Windows) 이 이 파일을 읽습니다.
+# 형식은 "종류 값" 두 칸뿐입니다. JSON 이 아닌 이유는 OS 별 파서 차이를 없애기 위함입니다.
+#
+#   marketplace <github-owner/repo>     플러그인 저장소를 등록
+#   plugin      <이름>@<마켓플레이스이름>  플러그인을 설치
+#
+# 마켓플레이스 "이름"은 저장소가 스스로 정합니다(owner/repo 와 다를 수 있음).
+# 아래 이름들은 실제 설치 후 `claude plugin marketplace list` 로 확인된 값입니다.
+# 항목을 추가·삭제한 뒤에는 install 스크립트를 다시 실행하면 됩니다(여러 번 실행해도 안전).
+
+# --- 마켓플레이스 등록 ---
+marketplace anthropics/claude-plugins-official
+marketplace revfactory/harness
+marketplace epoko77-ai/im-not-ai
+marketplace anthropics/knowledge-work-plugins
+
+# --- 플러그인 설치 ---
+# 공통(전 직군)
+plugin superpowers@claude-plugins-official
+plugin security-guidance@claude-plugins-official
+plugin harness@harness-marketplace
+plugin humanize-korean@im-not-ai
+
+# 직무별 (knowledge-work-plugins)
+plugin product-management@knowledge-work-plugins
+plugin marketing@knowledge-work-plugins
+plugin sales@knowledge-work-plugins
+plugin customer-support@knowledge-work-plugins
+plugin design@knowledge-work-plugins
+plugin data@knowledge-work-plugins
+plugin engineering@knowledge-work-plugins
+plugin productivity@knowledge-work-plugins
