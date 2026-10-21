@@ -21,3 +21,11 @@ __pycache__/
 
 # 수업용 초기 설정이 이 폴더에 준비하는 Codex 스킬 사본
 .agents/skills/career-os/
+
+# 수업용 개인 위키와 Codex 스킬 사본
+.agents/skills/karpathy-llm-wiki/
+30-knowledge/36-personal-wiki/
+.workshop-skills.*/
+
+# 개인 위키 위치 설정 (자료 본문 미포함)
+.wiki-local.json

@@ -22,7 +22,7 @@
 
 ### 1. 워크스페이스 받기·열기
 
-[워크스페이스 ZIP 받기](https://github.com/grandeclip/grandeclip-workspace/archive/refs/heads/main.zip)를 눌러 압축을 풀고, `grandeclip-workspace-main` 폴더를 **Claude Code 또는 Codex**에서 엽니다. Git이나 개발 도구를 별도로 설치할 필요는 없습니다. 사용할 AI 도구에는 먼저 로그인해 주세요.
+[워크스페이스 ZIP 받기](https://github.com/grandeclip/grandeclip-workspace/archive/refs/heads/main.zip)를 눌러 압축을 풀고, `grandeclip-workspace-main` 폴더를 **Claude Code 또는 Codex**에서 엽니다. ZIP을 받는 데 Git은 필요하지 않습니다. 사용할 AI 도구에 먼저 로그인해 주세요. 위키 화면 실행에는 Node.js 20 이상이 필요하며 초기 설정에서 확인합니다.
 
 ### 2. 초기 설정 요청하기
 
@@ -42,18 +42,18 @@ Claude Code에서는 `/setup-workspace`로 시작해도 됩니다. 수업용 설
 **같은 폴더에서 새 대화**를 열고 아래처럼 물어보세요.
 
 ```text
-지금 이 워크스페이스에서 career-os와 skill-creator를 사용할 수 있어?
+지금 이 워크스페이스에서 career-os, karpathy-llm-wiki, skill-creator를 사용할 수 있어?
 실제 스킬 목록과 지침을 확인해, 준비된 기능만 알려줘.
 ```
 
-`career-os`는 관심 회사 대화부터 회사·공고 조사, 내 경험 확인, 강점 정리까지 안내합니다. 준비를 확인하면 수업의 미션 요청으로 시작하세요.
+`career-os`는 관심 회사 대화부터 회사·공고 조사, 내 경험 확인, 강점 정리까지 안내합니다. `karpathy-llm-wiki`는 내 자료를 개념별로 정리하고 위키에 근거해 답합니다. 준비를 확인하면 수업의 미션 요청으로 시작하세요.
 
 <details>
 <summary>초기 설정이 멈추거나 스킬이 보이지 않으면</summary>
 
 - 설정이 알려준 누락·충돌 경로를 같은 대화에 보여주세요. 개인이 수정한 파일은 덮지 않습니다.
 - 새 대화에서도 안 보이면 같은 폴더를 다시 열거나 앱을 재시작하세요. 파일 준비와 실제 스킬 인식은 따로 확인합니다.
-- `career-os` 파일이 빠졌다면 최신 ZIP을 별도 폴더에 받아 다시 진행하세요. 개인 자료가 있는 폴더를 새 ZIP으로 덮지 마세요.
+- 스킬이나 위키 앱 파일이 빠졌다면 최신 ZIP을 별도 폴더에 받아 다시 진행하세요. 개인 자료가 있는 폴더를 새 ZIP으로 덮지 마세요.
 
 </details>
 
@@ -73,10 +73,12 @@ Claude Code에서는 `/setup-workspace`로 시작해도 됩니다. 수업용 설
 
 Windows 명령의 실행 정책 옵션은 해당 PowerShell 프로세스에만 적용되며 컴퓨터의 정책을 영구 변경하지 않습니다. 조직 정책으로 실행이 막히면 그 제한을 우회하지 않고 담당자에게 확인합니다.
 
-3. Claude Code는 `.claude/skills/career-os/`와 포함된 `skill-creator`를 사용합니다. Codex는 전체 `career-os` 묶음을 이 작업 폴더의 `.agents/skills/career-os/`에 준비하고, `skill-creator`는 기본 내장 스킬을 사용합니다. Claude 플러그인·커맨드·에이전트가 Codex에 그대로 등록된다고 설명하지 않습니다.
+3. Claude Code는 `.claude/skills/`의 `career-os`, `karpathy-llm-wiki`, `skill-creator`를 사용합니다. Codex는 `career-os`와 `karpathy-llm-wiki`의 전체 묶음을 이 작업 폴더의 `.agents/skills/`에 준비하고, `skill-creator`는 기본 내장 스킬을 사용합니다. Claude 플러그인·커맨드·에이전트가 Codex에 그대로 등록된다고 설명하지 않습니다.
 4. Codex가 `.agents` 폴더 쓰기 승인을 요구하면 필요한 설치 명령에 한정해 도구의 승인 절차를 따릅니다. 권한 오류를 성공으로 처리하거나 전역 보안 설정을 바꾸지 않습니다. 승인받아 재시도할 수 없으면 사용자가 직접 실행할 수 있도록 해당 수업용 명령을 알려줍니다.
 5. 성공한 뒤 같은 명령의 읽기 전용 확인을 한 번 실행합니다. 누락·충돌·읽기 실패가 남으면 해당 경로와 필요한 조치만 알리고 준비 완료로 표시하지 않습니다. 설치를 무한 반복하거나 개인 설정·원본 스킬을 덮지 않습니다.
 6. 파일이 준비됐으면 “파일 준비를 마쳤어요. 같은 폴더에서 새 대화를 열고 스킬을 확인해 주세요.”라고 짧게 안내합니다. 새 대화의 확인 요청에는 실제 사용 가능한 스킬 목록의 경로와 지침을 읽고 답합니다. Codex 내장 `skill-creator`가 목록에 없다면 미확인으로 남기며 Claude용 사본으로 덮지 않습니다.
+
+7. 위키 앱의 필수 파일과 Node.js 20 이상을 확인합니다. 스킬 파일 준비, 위키 실행 환경, AI 도구 로그인을 구분해 보고합니다. Node.js가 없거나 버전이 낮으면 [공식 다운로드](https://nodejs.org/en/download)를 안내하고, 실행 환경이 미준비임을 알립니다. CLI와 로그인은 위키를 열었을 때 실제 상태로 확인하며 설치 스크립트만 성공했다고 사용 가능으로 표시하지 않습니다.
 
 이 과정에서 취업 준비 스킬을 실행하거나 회사·개인 자료를 조사하지 않습니다. 기존 `CLAUDE.md`, `AGENTS.md`, 개인 파일과 전역 설정은 보존합니다.
 
@@ -84,9 +86,25 @@ Windows 명령의 실행 정책 옵션은 해당 PowerShell 프로세스에만 �
 
 ---
 
+## 내 위키 열기
+
+초기 설정을 마친 뒤 AI에게 **“위키 열어줘”**라고 요청하세요. 개념 지도에서 문서를 탐색하고, 읽는 문서를 바탕으로 바로 질문할 수 있습니다. 화면에서 Codex 또는 Claude를 선택하면 해당 CLI의 설치·로그인 상태를 확인합니다.
+
+```sh
+node 00-system/wiki-app/server.mjs
+```
+
+AI는 워크스페이스 루트에서 이 명령을 실행한 뒤 출력된 로컬 주소를 엽니다. Node.js 20 이상과 사용할 AI 도구의 CLI·로그인이 필요합니다. 추가 Node 패키지를 설치할 필요는 없습니다. 기본 포트가 사용 중이면 `--port 3114`를 붙입니다.
+
+**자료 추가**에서 직접 선택한 파일만 가져옵니다. Markdown·TXT·HTML·CSV·JSON은 바로 읽으며, PDF는 `pdftotext`, DOCX는 Python 3이 있을 때 읽습니다. 지원하지 않는 형식이나 읽지 못한 파일은 화면에 이유를 보여줍니다.
+
+원본 파일은 바꾸지 않습니다. 가져온 사본, 개념 노트와 대화는 `30-knowledge/36-personal-wiki/`에 저장됩니다. 이 개인 데이터 폴더는 Git에서 제외하며 공개 저장소에 푸시하지 않습니다. 이미 다른 폴더에 위키가 있다면 그 자료를 이동하지 않고 `.wiki-local.json`의 `root` 경로로 연결할 수 있습니다. 이 로컬 설정 파일도 Git에서 제외합니다. AI 답변을 만들 때는 선택한 도구의 온라인 모델을 사용합니다.
+
+---
+
 ## 🧰 어떤 스킬이 들어있나요
 
-수업에서는 **취업 준비 `career-os`**와 **스킬 제작 `skill-creator`**를 사용합니다. Claude Code는 폴더에 포함된 스킬을, Codex는 작업 폴더에 준비한 career-os와 기본 내장 skill-creator를 사용합니다.
+수업에서는 **취업 준비 `career-os`**, **개인 위키 `karpathy-llm-wiki`**, **스킬 제작 `skill-creator`**를 사용합니다. Claude Code는 포함된 스킬을, Codex는 작업 폴더에 준비한 두 스킬과 기본 내장 skill-creator를 사용합니다.
 
 폴더에는 확장 제작·브랜드·디자인·사내 커뮤니케이션용 스킬도 함께 있습니다. 자세한 목록은 `00-system/README.md`를 참고하세요.
 

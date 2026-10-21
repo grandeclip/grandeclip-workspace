@@ -60,8 +60,9 @@ def fixture(label):
             shutil.copy2(repo / name, workspace / name)
         for name in ('setup-workshop.sh', 'setup-workshop.ps1', 'plugins.txt'):
             shutil.copy2(repo / '00-system/02-scripts' / name, workspace / '00-system/02-scripts' / name)
-        for name in ('career-os', 'skill-creator'):
+        for name in ('career-os', 'skill-creator', 'karpathy-llm-wiki'):
             shutil.copytree(repo / '.claude/skills' / name, workspace / '.claude/skills' / name)
+        shutil.copytree(repo / '00-system/wiki-app', workspace / '00-system/wiki-app')
         (workspace / '.claude/commands').mkdir()
         (workspace / '.claude/commands/setup-workspace.md').write_text('fixture command\n')
         (workspace / 'CLAUDE.md').write_text('personal Claude settings\n')
@@ -118,6 +119,9 @@ def verify_pack(workspace):
     target_files = {str(p.relative_to(target)): p.read_bytes() for p in target.rglob('*') if p.is_file()}
     assert original_files == target_files
     assert all((target / relative).is_file() for relative in required)
+    wiki_original = workspace / '.claude/skills/karpathy-llm-wiki'
+    wiki_target = workspace / '.agents/skills/karpathy-llm-wiki'
+    assert {str(p.relative_to(wiki_original)): p.read_bytes() for p in wiki_original.rglob('*') if p.is_file()} == {str(p.relative_to(wiki_target)): p.read_bytes() for p in wiki_target.rglob('*') if p.is_file()}
     assert not (workspace / '.agents/skills/skill-creator').exists()
     for path in target.rglob('*.md'):
         content = path.read_text()
@@ -175,7 +179,7 @@ def test_missing_check(backend):
 
 
 def test_missing_source(backend):
-    for tool, relative in [('codex', 'career-os/' + name) for name in required] + [('claude', 'skill-creator/SKILL.md'), ('claude', 'skill-creator/scripts/quick_validate.py')]:
+    for tool, relative in [('codex', 'career-os/' + name) for name in required] + [('claude', 'skill-creator/SKILL.md'), ('claude', 'skill-creator/scripts/quick_validate.py'), ('codex', 'karpathy-llm-wiki/SKILL.md'), ('claude', 'karpathy-llm-wiki/references/workshop.md'), ('codex', 'karpathy-llm-wiki/scripts/check_evidence.py')]:
         with fixture('missing source') as (workspace, _, _, log, environment):
             (workspace / '.claude/skills' / relative).unlink()
             before = snapshot(workspace)
@@ -210,7 +214,7 @@ def test_personal_extra(backend):
 
 
 def test_symlink_block(backend):
-    for relative in ('.agents', '.agents/skills', '.agents/skills/career-os'):
+    for relative in ('.agents', '.agents/skills', '.agents/skills/career-os', '.agents/skills/karpathy-llm-wiki'):
         with fixture('symlink ancestor') as (workspace, fixture_root, _, log, environment):
             outside = fixture_root / 'outside'
             outside.mkdir()
@@ -239,13 +243,16 @@ def test_arguments(backend):
 
 
 def test_copy_failures(_):
-    for operation in ('copy fails', 'copy corrupts', 'move fails'):
+    for operation in ('copy fails', 'copy corrupts', 'move fails', 'second move fails'):
         with fixture(operation) as (workspace, _, tool_bin, log, environment):
             if operation == 'copy fails':
                 command, body = 'cp', 'mkdir -p "$3"\nprintf partial > "$3/SKILL.md"\nexit 23\n'
             elif operation == 'copy corrupts':
                 command, body = 'cp', '"$WORKSHOP_TEST_REAL_CP" "$@"\nprintf corrupt > "$3/references/runtime-contract.md"\n'
                 environment['WORKSHOP_TEST_REAL_CP'] = shutil.which('cp')
+            elif operation == 'second move fails':
+                command, body = 'mv', 'case "$2" in *karpathy-llm-wiki) exit 24 ;; esac\n"$WORKSHOP_TEST_REAL_MV" "$@"\n'
+                environment['WORKSHOP_TEST_REAL_MV'] = shutil.which('mv')
             else:
                 command, body = 'mv', 'exit 24\n'
             (tool_bin / command).unlink()
@@ -254,8 +261,43 @@ def test_copy_failures(_):
             process = run(workspace, environment, ['--workshop', '--tool', 'codex'])
             expect(process, False)
             assert '파일 준비 확인:' not in process.stdout, process.stdout
-            assert snapshot(workspace) == before
+            after = snapshot(workspace)
+            assert after == before, (operation, [key for key in set(before) | set(after) if before.get(key) != after.get(key)], process.stdout)
             assert_offline(log)
+
+
+
+def test_wiki_conflict(backend):
+    with fixture('wiki personal conflict') as (workspace, _, _, log, environment):
+        target = workspace / '.agents/skills/karpathy-llm-wiki'
+        shutil.copytree(workspace / '.claude/skills/karpathy-llm-wiki', target)
+        (target / 'SKILL.md').write_text('MY LEARNING STYLE\n')
+        before = snapshot(workspace)
+        expect(run(workspace, environment, ['--workshop', '--tool', 'codex'], backend), False, 'karpathy-llm-wiki')
+        assert snapshot(workspace) == before
+        assert not (workspace / '.agents/skills/career-os').exists()
+        assert_offline(log)
+
+
+def test_missing_app(backend):
+    with fixture('missing wiki app') as (workspace, _, _, log, environment):
+        (workspace / '00-system/wiki-app/server.mjs').unlink()
+        before = snapshot(workspace)
+        expect(run(workspace, environment, ['--workshop', '--tool', 'codex'], backend), False, 'server.mjs')
+        assert snapshot(workspace) == before
+        assert_offline(log)
+
+
+def test_runtime_reporting(backend):
+    with fixture('wiki runtime') as (workspace, _, tool_bin, log, environment):
+        before = snapshot(workspace)
+        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), text='위키 실행 환경 미확인')
+        write_executable(tool_bin / 'node', 'printf "18\\n"\n')
+        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), text='위키 실행 환경 미준비')
+        write_executable(tool_bin / 'node', 'printf "22\\n"\n')
+        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), text='위키 실행 환경: Node.js 22 확인')
+        assert snapshot(workspace) == before
+        assert_offline(log)
 
 
 def test_legacy(_):
@@ -310,6 +352,9 @@ cases = [
     ('missing --check writes nothing', test_missing_check),
     ('missing source fails before mutation', test_missing_source),
     ('personal destination conflict preserves bytes', test_personal_conflict),
+    ('wiki conflict preflight preserves career and personal wiki', test_wiki_conflict),
+    ('missing app fails before mutation', test_missing_app),
+    ('files readiness and missing/old/current Node runtime differ', test_runtime_reporting),
     ('personal extra files survive identical rerun', test_personal_extra),
     ('symlink ancestors block external writes', test_symlink_block),
     ('entry/helper invalid flags and help', test_arguments),

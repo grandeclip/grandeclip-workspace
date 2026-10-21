@@ -1,6 +1,6 @@
 ---
 description: 수업용 초기 설정. --work를 명시하면 기존 회사 업무용 전체 설정
-allowed-tools: Bash(bash install.sh:*), Bash(powershell:*), Bash(bash 00-system/02-scripts/globalize.sh:*), Read, Write, Edit, Glob
+allowed-tools: Bash(bash install.sh:*), Bash(node 00-system/wiki-app/server.mjs:*), Bash(powershell:*), Bash(bash 00-system/02-scripts/globalize.sh:*), Read, Write, Edit, Glob
 ---
 
 # 워크스페이스 초기 설정
@@ -11,7 +11,8 @@ allowed-tools: Bash(bash install.sh:*), Bash(powershell:*), Bash(bash 00-system/
 
 1. `README.md`의 **AI 초기 설정 절차**를 읽습니다.
 2. 현재 Claude Code 환경과 OS에 맞는 `--workshop --tool claude` 또는 `-Workshop -Tool Claude` 명령으로 포함된 스킬을 확인합니다. 실행 결과가 실패하면 실제 경로와 필요한 조치만 안내합니다.
-3. 파일 준비 뒤에는 같은 폴더의 새 대화에서 `career-os`와 `skill-creator`의 실제 인식을 확인하도록 안내합니다.
+3. 파일 준비 뒤에는 같은 폴더의 새 대화에서 `career-os`, `karpathy-llm-wiki`, `skill-creator`의 실제 인식을 확인하도록 안내합니다.
+4. 스킬 파일 준비와 위키 실행 환경을 구분합니다. Node.js 20 이상이 없으면 `README.md`의 공식 설치 안내를 보여주며 위키 실행 준비가 끝났다고 말하지 않습니다. 위키를 열어달라는 요청을 받은 경우에만 **내 위키 열기** 절차로 로컬 서버를 실행하고 실제 CLI·로그인 상태를 확인합니다.
 
 수업용 설정에서는 아래 업무용 흐름, 외부 플러그인 설치, 개인 프로필·Daily Note 생성, 전역 적용을 실행하지 않습니다. 이름·직무를 질문하지 않고 기존 파일과 설정을 보존합니다.
 
