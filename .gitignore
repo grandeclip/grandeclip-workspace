@@ -18,3 +18,6 @@
 *.tmp
 .pytest_cache/
 __pycache__/
+
+# 수업용 초기 설정이 이 폴더에 준비하는 Codex 스킬 사본
+.agents/skills/career-os/

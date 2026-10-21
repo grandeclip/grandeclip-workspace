@@ -35,15 +35,21 @@ grandeclip 워크스페이스의 시스템 폴더입니다. 템플릿, 가이드
 | `plugins.txt` | 설치할 플러그인·마켓플레이스 목록 (**단일 원천**) |
 | `globalize.sh` / `globalize.ps1` | 워크스페이스의 커맨드·스킬·보안지침을 `~/.claude` 에 전역 적용 |
 | `test-globalize.sh` | globalize 동작 테스트 |
+| `setup-workshop.sh` / `setup-workshop.ps1` | Claude Code·Codex 수업용 파일 준비·읽기 전용 검사 |
+| `test-workshop-setup.sh` | 개인 설정을 보존하는 수업용 준비 회귀 검사 |
 
 설치 진입점인 `install.sh` / `install.ps1` 은 **워크스페이스 루트**에 있습니다.
 사용자가 폴더를 열자마자 보이도록 일부러 루트에 두었습니다.
 
 ---
 
+## 수업용 준비 검증
+
+`test-workshop-setup.sh`의 12개 회귀 그룹과 Bash 구문 검사를 통과했다. Codex는 GitHub ZIP 형태의 임시 폴더에서 파일 준비 후 별도 새 대화의 실제 스킬 목록·지침 읽기를 확인했다. 이는 취업 조사 실행 검증과 구분한다. Claude는 번들 읽기 검사를 확인했으며 Windows PowerShell 실행과 Claude 계정의 실제 대화는 이번에 수행하지 않았다.
+
 ## 스킬 구성
 
-세팅되는 스킬은 **두 경로**로 나뉩니다. 헷갈리기 쉬우니 여기 정리해 둡니다.
+수업용 설정은 포함된 career-os와 스킬 제작 기능만 준비합니다. Claude Code는 번들 스킬을 확인하고 Codex는 `.agents/skills/career-os/` 사본과 기본 내장 skill-creator를 사용합니다. 회사 업무용 전체 설정에서 세팅되는 스킬은 **두 경로**로 나뉩니다. 헷갈리기 쉬우니 여기 정리해 둡니다.
 
 ### ① 플러그인 12종 — `install.sh` 가 받아옴
 
@@ -63,7 +69,7 @@ grandeclip 워크스페이스의 시스템 폴더입니다. 템플릿, 가이드
 | `brand-guidelines`, `canvas-design`, `internal-comms` | 브랜드·디자인·사내 커뮤니케이션 |
 | `career-os` | 관심 회사 대화 → 회사·공고 조사 → 내 경험 확인 → 강점 정리 |
 
-**왜 저장소에 넣어 두는가** — 이 워크스페이스는 Drive 로 배포되고 `git clone` 을
+**왜 저장소에 넣어 두는가** — 이 워크스페이스는 공개 GitHub ZIP으로 배포하며 `git clone` 을
 전제하지 않습니다. 네트워크가 없거나 플러그인 설치가 실패해도 이 8종은 폴더에
 들어 있으므로 바로 쓸 수 있습니다. **의도된 안전망이며, 마켓플레이스에 같은
 이름이 보인다고 지우면 안 됩니다.**

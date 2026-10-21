@@ -1,22 +1,28 @@
 ---
-description: grandeclip 워크스페이스 초기 설정 마법사 (개인 CLAUDE.md 생성 + 스킬 설치)
+description: 수업용 초기 설정. --work를 명시하면 기존 회사 업무용 전체 설정
 allowed-tools: Bash(bash install.sh:*), Bash(powershell:*), Bash(bash 00-system/02-scripts/globalize.sh:*), Read, Write, Edit, Glob
 ---
 
-# Setup Workspace - 초기 설정 마법사
+# 워크스페이스 초기 설정
 
-grandeclip 워크스페이스를 처음 사용할 때 실행하는 대화형 설정 도구입니다.
-**개인 CLAUDE.md를 자동으로 생성**하여 Claude가 여러분의 업무 맥락을 이해할 수 있게 합니다.
+## 기본: 수업용 설정
 
----
+사용자가 `--work` 또는 회사 업무용 전체 설정을 명시하지 않았다면 이 절만 수행하고 끝냅니다.
 
-## 📋 스킬 설치 상태 (이 커맨드가 실행되는 순간 자동 수집됨)
+1. `README.md`의 **AI 초기 설정 절차**를 읽습니다.
+2. 현재 Claude Code 환경과 OS에 맞는 `--workshop --tool claude` 또는 `-Workshop -Tool Claude` 명령으로 포함된 스킬을 확인합니다. 실행 결과가 실패하면 실제 경로와 필요한 조치만 안내합니다.
+3. 파일 준비 뒤에는 같은 폴더의 새 대화에서 `career-os`와 `skill-creator`의 실제 인식을 확인하도록 안내합니다.
 
-!`bash install.sh --check 2>&1 | tail -40`
+수업용 설정에서는 아래 업무용 흐름, 외부 플러그인 설치, 개인 프로필·Daily Note 생성, 전역 적용을 실행하지 않습니다. 이름·직무를 질문하지 않고 기존 파일과 설정을 보존합니다.
 
-> 위 블록은 **당신이 해야 할 일이 아니라, 이미 일어난 일의 결과**입니다.
-> 커맨드가 실행되는 순간 진단이 끝나 있으므로, 진단을 다시 실행할 필요도 건너뛸 수도 없습니다.
-> 아래 Step 0 은 그 결과를 **어떻게 처리할지**만 정합니다.
+## 선택: 회사 업무용 전체 설정 (`--work`)
+
+이하 절차는 `--work` 또는 회사 업무용 전체 설정을 명시한 경우에만 실행합니다. 먼저 OS에 맞는 읽기 전용 진단을 실행하고 출력을 Step 0의 입력으로 사용합니다.
+
+- macOS/Linux: `bash install.sh --check`
+- Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 -Check`
+
+Bash를 미리 실행하는 동적 진단 블록은 사용하지 않습니다. Windows에서는 처음부터 PowerShell을 사용합니다.
 
 ---
 
@@ -48,7 +54,7 @@ grandeclip 워크스페이스를 처음 사용할 때 실행하는 대화형 설
 
 #### (B) "설치됨 N 개 · 누락 M 개" 인 경우
 
-**묻지 말고 바로 설치하세요.** 사용자는 이미 `/setup-workspace` 로 설정을 요청했고,
+**묻지 말고 바로 설치하세요.** 사용자는 이미 `/setup-workspace --work` 로 설정을 요청했고,
 README 도 "이것만 입력하면 끝"이라고 안내합니다. 여기서 [예/아니오]를 물으면
 "아니오"를 고른 사람이 반쪽짜리 워크스페이스를 갖게 되는데, 그게 바로 이 단계가
 막으려는 문제입니다.
@@ -64,7 +70,7 @@ README 도 "이것만 입력하면 끝"이라고 안내합니다. 여기서 [예
 - macOS/Linux → `bash install.sh --yes`
 - Windows → `powershell -ExecutionPolicy Bypass -File install.ps1 -Yes`
 
-**끝나면 반드시 다시 진단하세요** (`bash install.sh --check`).
+**끝나면 반드시 OS에 맞춰 다시 진단하세요** (macOS/Linux: `bash install.sh --check`, Windows: `powershell -NoProfile -ExecutionPolicy Bypass -File install.ps1 -Check`).
 스크립트는 개별 명령의 성공 여부를 믿지 않고 실제 설치 상태로 판정하도록 만들어져 있습니다.
 
 - **모두 설치됨** → "다 받았어요!" 정도로 짧게 알리고 Step 1 로.
@@ -75,7 +81,7 @@ README 도 "이것만 입력하면 끝"이라고 안내합니다. 여기서 [예
   스킬 몇 개를 못 받았어요:
   {누락된 항목을 이름 그대로 나열}
 
-  설정은 계속 진행할게요. 나중에 /setup-workspace 를 다시 실행하면 이어서 받아옵니다.
+  설정은 계속 진행할게요. 나중에 /setup-workspace --work 를 다시 실행하면 이어서 받아옵니다.
   계속 안 되면 위 목록을 그대로 #gc-ai-라운지 에 올려주세요.
   ```
 
@@ -94,7 +100,7 @@ README 도 "이것만 입력하면 끝"이라고 안내합니다. 여기서 [예
 ### 📌 Step 0 에서 지켜야 할 것 두 가지
 
 1. **스크립트 출력을 그대로 옮기지 마세요.** 스크립트는 터미널에서 직접 실행하는 사람도
-   쓰기 때문에 끝에 "claude 를 실행하세요 / /setup-workspace 를 입력하세요" 같은 안내가
+   쓰기 때문에 끝에 "claude 를 실행하세요 / /setup-workspace --work 를 입력하세요" 같은 안내가
    붙습니다. 지금은 이미 그 안에 있으므로 그 부분은 무시하고, **누락된 항목 이름만** 쓰세요.
 2. **정상일 때는 침묵하세요.** 대부분의 사용자는 (A) 에 해당합니다. 그들에게 진단·설치
    이야기를 꺼내면 첫인상이 "설정이 복잡하다"가 됩니다.
@@ -296,7 +302,7 @@ Step 0에서 파일 9개를 모두 확인했을 때만 아래 안내에 `career-
 **"아니오"인 경우:**
 ```
 알겠어요! 이 설정은 지금 워크스페이스 폴더 안에서만 동작합니다.
-나중에 /setup-workspace를 다시 실행하면 언제든 전역 적용할 수 있어요.
+나중에 /setup-workspace --work를 다시 실행하면 언제든 전역 적용할 수 있어요.
 ```
 
 **주의:**
@@ -321,5 +327,5 @@ Step 0에서 파일 9개를 모두 확인했을 때만 아래 안내에 `career-
 
 ## 재실행
 
-언제든 `/setup-workspace`로 다시 실행 가능합니다.
-기존 CLAUDE.md가 있으면 덮어쓸지 물어봅니다.
+언제든 `/setup-workspace --work`로 다시 실행 가능합니다.
+기존 CLAUDE.md가 있으면 덮어쓸지 물어봅니다. 수업용 기본 설정에서는 개인 프로필이나 Daily Note를 만들지 않습니다.

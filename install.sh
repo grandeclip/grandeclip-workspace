@@ -4,6 +4,7 @@
 #   bash install.sh              대화형 (권장)
 #   bash install.sh --yes        확인 없이 전부 진행
 #   bash install.sh --check      아무것도 설치하지 않고 현재 상태만 진단
+#   bash install.sh --workshop --tool claude|codex [--check] [--yes]
 #
 # 여러 번 실행해도 안전합니다. 이미 설치된 항목은 건너뜁니다.
 
@@ -13,15 +14,31 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_LIST="$SCRIPT_DIR/00-system/02-scripts/plugins.txt"
 ASSUME_YES=0
 CHECK_ONLY=0
-
-for arg in "$@"; do
-  case "$arg" in
-    --yes|-y)   ASSUME_YES=1 ;;
-    --check)    CHECK_ONLY=1 ;;
-    --help|-h)  sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) echo "알 수 없는 옵션: $arg (--help 로 사용법 확인)"; exit 2 ;;
+WORKSHOP=0
+TOOL=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --yes|-y) ASSUME_YES=1; shift ;;
+    --check) CHECK_ONLY=1; shift ;;
+    --workshop) WORKSHOP=1; shift ;;
+    --tool)
+      if [ "$#" -lt 2 ] || [ -z "$2" ] || [ -n "$TOOL" ]; then
+        printf '%s\n' '--tool claude 또는 --tool codex를 한 번 지정해 주세요.' >&2; exit 2
+      fi
+      TOOL="$2"; shift 2 ;;
+    --help|-h) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) printf '알 수 없는 옵션: %s (--help 로 사용법 확인)\n' "$1" >&2; exit 2 ;;
   esac
 done
+# 수업은 번들 파일만 준비한다. Git/개발자도구/Claude CLI 점검보다 먼저 실행한다.
+if [ "$WORKSHOP" -eq 1 ]; then
+  case "$TOOL" in claude|codex) ;; *) printf '%s\n' '수업 모드에는 --tool claude 또는 --tool codex가 필요합니다.' >&2; exit 2 ;; esac
+  workshop_args=(--tool "$TOOL")
+  if [ "$CHECK_ONLY" -eq 1 ]; then workshop_args+=(--check); fi
+  if [ "$ASSUME_YES" -eq 1 ]; then workshop_args+=(--yes); fi
+  exec "$BASH" "$SCRIPT_DIR/00-system/02-scripts/setup-workshop.sh" "${workshop_args[@]}"
+fi
+if [ -n "$TOOL" ]; then printf '%s\n' '--tool은 --workshop과 함께 사용해 주세요.' >&2; exit 2; fi
 
 # ── 출력 도우미 ──────────────────────────────────────────────
 say()  { printf '%s\n' "$*"; }
@@ -106,7 +123,7 @@ fi
 
 # 폴더 무결성 — .claude 는 점으로 시작하는 숨김 폴더라 압축·드라이브 업로드·
 # 다운로드 과정에서 통째로 빠지는 사고가 잦다. 없으면 스킬은 정상적으로 받아지지만
-# /setup-workspace 를 비롯한 워크스페이스 커맨드가 전부 사라진다.
+# /setup-workspace --work 를 비롯한 워크스페이스 커맨드가 전부 사라진다.
 # 설치 자체는 막지 않는다 — 플러그인은 사용자 전역에 설치되므로 폴더를 다시 받아도
 # 그대로 남고, 여기서 멈추면 기다린 시간만 버리게 된다.
 missing_commands=0
@@ -118,7 +135,7 @@ if [ ! -f "$SCRIPT_DIR/.claude/commands/setup-workspace.md" ]; then
   say "     복사·압축·다운로드 과정에서 누락되는 일이 잦습니다."
   say ""
   say "     스킬 설치는 그대로 진행합니다(설치한 스킬은 이 폴더와 무관하게 남습니다)."
-  say "     다만 /setup-workspace 를 쓰려면 폴더를 다시 받아야 합니다."
+  say "     다만 /setup-workspace --work 를 쓰려면 폴더를 다시 받아야 합니다."
 else
   ok "준비 완료"
 fi
@@ -230,12 +247,12 @@ if [ "$miss_n" -eq 0 ]; then
   say "  아직 Claude Code 를 열지 않았다면:"
   say ""
   say "    1. 이 폴더에서 claude 를 실행하세요"
-  say "    2. /setup-workspace 를 입력하세요"
+  say "    2. /setup-workspace --work 를 입력하세요"
   say ""
   say "  claude 명령을 못 찾으면 새 터미널을 열어 주세요."
   say ""
   if [ "$missing_commands" = "1" ]; then
-    warn "다만 .claude 폴더가 빠져 있어 /setup-workspace 는 쓸 수 없습니다."
+    warn "다만 .claude 폴더가 빠져 있어 /setup-workspace --work 는 쓸 수 없습니다."
     say "     공유받은 폴더를 다시 받아 주세요. 스킬은 이미 설치되어 그대로 남습니다."
     say ""
   fi
