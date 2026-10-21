@@ -24,7 +24,23 @@ grandeclip 워크스페이스를 처음 사용할 때 실행하는 대화형 설
 
 ### Step 0: 위 진단 결과 처리 (조용히, 필요할 때만)
 
-위 블록을 읽고 아래 세 갈래 중 하나를 고르세요. 사용자에게는 **문제가 있을 때만** 보입니다.
+먼저 `Glob`으로 아래 career-os 파일 9개를 찾고, `Read`의 줄 수를 1로 제한해 읽을 수 있는지 확인하세요. 경로는 워크스페이스 루트 기준입니다. 이 단계에서는 스킬을 실행하지 않습니다.
+
+- `.claude/skills/career-os/SKILL.md`
+- `.claude/skills/career-os/skills/company-research/SKILL.md`
+- `.claude/skills/career-os/skills/job-scout/SKILL.md`
+- `.claude/skills/career-os/skills/experience-extract/SKILL.md`
+- `.claude/skills/career-os/skills/application-build/SKILL.md`
+- `.claude/skills/career-os/agents/research.md`
+- `.claude/skills/career-os/agents/experience.md`
+- `.claude/skills/career-os/agents/writing.md`
+- `.claude/skills/career-os/references/runtime-contract.md`
+
+모두 읽을 수 있을 때만 career-os 준비 완료로 기록하세요. 정상일 때는 별도 설명 없이 진행합니다.
+누락되거나 읽을 수 없는 파일이 있으면 해당 경로를 알려주고, `.claude` 폴더를 포함한 워크스페이스를 다시 받아 달라고 안내하세요.
+이 경우 career-os가 준비됐다고 말하지 않고, 아래 플러그인 확인과 개인 설정은 계속 진행합니다.
+
+이어서 위 플러그인 진단 블록을 읽고 아래 세 갈래 중 하나를 고르세요. 사용자에게는 **문제가 있을 때만** 보입니다.
 
 #### (A) "스킬 N 개가 모두 설치되었습니다" 인 경우 — 정상
 
@@ -190,6 +206,7 @@ README 도 "이것만 입력하면 끝"이라고 안내합니다. 여기서 [예
 | `/thinking-partner` | 생각 정리 파트너 |
 | `/todo`, `/todos` | 할 일 관리 |
 | `/idea` | 아이디어 추출·저장 |
+| `/career-os` | 관심 회사부터 내 경험·강점까지 취업 준비 |
 
 <!-- 🔒 보안 원칙 (단일 원천): 이 자리에 `00-system/03-guides/global-security-block.md` 파일의 내용을 그대로 삽입하세요. 파일이 자체 제목(`## 🔒 보안 원칙 ...`)과 본문을 모두 담고 있으므로, 이 주석을 지우고 파일 내용으로 대체합니다. 이어서 워크스페이스 로컬 안내로 아래 한 줄을 덧붙입니다. -->
 - 전문: `00-system/03-guides/AI-보안-가이드.md`
@@ -212,6 +229,7 @@ README 도 "이것만 입력하면 끝"이라고 안내합니다. 여기서 [예
 **중요**:
 - 파일 경로는 실제 워크스페이스 루트에 생성
 - 기존 CLAUDE.md가 있으면 덮어쓸지 확인
+- Step 0에서 career-os 파일 9개를 모두 확인하지 못했다면 주요 커맨드의 `/career-os` 행은 생략
 - **보안 원칙 섹션은 반드시 포함**할 것 (회사 정책)
 - **보안 섹션은 반드시 `00-system/03-guides/global-security-block.md`의 내용을 그대로 사용**할 것(회사 정책 단일 원천). 임의로 문구를 바꾸지 말 것.
 
@@ -230,6 +248,12 @@ README 도 "이것만 입력하면 끝"이라고 안내합니다. 여기서 [예
 ---
 
 ### Step 5: 완료 안내
+
+Step 0에서 파일 9개를 모두 확인했을 때만 아래 안내에 `career-os 준비됨`과 다음 한 줄을 추가하세요.
+
+> `/career-os`를 입력해 관심 회사부터 이야기해 보세요. 명령이 보이지 않으면 새 대화를 열거나 Claude Code를 재시작해 주세요.
+
+파일이 빠졌다면 career-os 완료 문구와 사용 안내는 생략하고, 다시 받아야 할 파일 경로를 짧게 알려주세요.
 
 ```
 설정이 완료되었습니다! 🎉

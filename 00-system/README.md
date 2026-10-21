@@ -55,21 +55,24 @@ grandeclip 워크스페이스의 시스템 폴더입니다. 템플릿, 가이드
 | 공통 | `superpowers`, `security-guidance`, `harness`, `humanize-korean` |
 | 직무별 | `product-management`, `marketing`, `sales`, `customer-support`, `design`, `data`, `engineering`, `productivity` |
 
-### ② vendored 스킬 7종 — `.claude/skills/` 에 폴더째 포함
+### ② 포함 스킬 8종: `.claude/skills/`에 폴더째 포함
 
 | 스킬 | 용도 |
 |------|------|
 | `skill-creator`, `subagent-creator`, `slash-command-creator`, `hook-creator` | Claude Code 확장 제작 |
 | `brand-guidelines`, `canvas-design`, `internal-comms` | 브랜드·디자인·사내 커뮤니케이션 |
+| `career-os` | 관심 회사 대화 → 회사·공고 조사 → 내 경험 확인 → 강점 정리 |
 
 **왜 저장소에 넣어 두는가** — 이 워크스페이스는 Drive 로 배포되고 `git clone` 을
-전제하지 않습니다. 네트워크가 없거나 플러그인 설치가 실패해도 이 7종은 폴더에
+전제하지 않습니다. 네트워크가 없거나 플러그인 설치가 실패해도 이 8종은 폴더에
 들어 있으므로 바로 쓸 수 있습니다. **의도된 안전망이며, 마켓플레이스에 같은
 이름이 보인다고 지우면 안 됩니다.**
 
 실제로 확인한 결과(2026-09-04) `brand-guidelines`·`canvas-design`·`internal-comms`
 세 종은 마켓플레이스에서 받을 수 없고, `skill-creator` 는 동명 플러그인이 있으나
-출처가 다른 제3자 저장소였습니다. 전부 Apache-2.0 입니다.
+출처가 다른 제3자 저장소였습니다. 기존 외부 스킬 7종은 Apache-2.0입니다. 이 라이선스 설명에 워크스페이스에서 추가한 `career-os`는 포함하지 않습니다.
+
+`career-os`는 총괄 스킬 안에 하위 스킬 4개·담당 지침 3개·공통 실행 계약을 함께 넣었습니다. `/setup-workspace`가 필수 파일 9개를 확인하며, 별도 다운로드 없이 `/career-os`로 시작합니다. 전역 적용에 동의한 경우 이 묶음도 함께 연결됩니다. 명령이 보이지 않으면 새 대화를 열거나 Claude Code를 재시작하세요.
 
 ---
 
@@ -92,4 +95,4 @@ grandeclip 워크스페이스의 시스템 폴더입니다. 템플릿, 가이드
 
 ---
 
-**Last Updated**: 2026-09-04
+**Last Updated**: 2026-10-21

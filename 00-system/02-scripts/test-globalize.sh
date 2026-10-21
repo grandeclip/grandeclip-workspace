@@ -42,6 +42,79 @@ grep -q "USER OWNED" "$H/agents/zettelkasten-linker.md"; check "$?" "0" "사용�
 echo "$out" | grep -qi "충돌"; check "$?" "0" "충돌로 보고됨"
 rm -rf "$H"
 
+# career-os는 총괄 폴더 하나에 실행에 필요한 파일을 함께 둔다.
+career_files=(
+  "SKILL.md"
+  "skills/company-research/SKILL.md"
+  "skills/job-scout/SKILL.md"
+  "skills/experience-extract/SKILL.md"
+  "skills/application-build/SKILL.md"
+  "agents/research.md"
+  "agents/experience.md"
+  "agents/writing.md"
+  "references/runtime-contract.md"
+)
+career_pack_matches() {
+  local target="$1" relative_path
+  for relative_path in "${career_files[@]}"; do
+    [ -r "$target/$relative_path" ] || return 1
+    cmp -s "$REPO_ROOT/.claude/skills/career-os/$relative_path" "$target/$relative_path" || return 1
+  done
+}
+career_refs_readable() {
+  local target="$1" relative_path source_file reference references
+  for relative_path in "${career_files[@]}"; do
+    source_file="$target/$relative_path"
+    [ -r "$source_file" ] || return 1
+    # 실행용 링크만 검사한다. 공통 계약의 경로 표기 예시는 각 독자의 위치 설명이다.
+    references="$(
+      grep -oE '\]\([A-Za-z0-9_./-]+\.md\)' "$source_file" | sed 's/^](//;s/)$//' || true
+      if [ "$relative_path" = "SKILL.md" ]; then
+        grep -oE '(skills/|agents/)[A-Za-z0-9_./-]+\.md' "$source_file" || true
+      fi
+    )"
+    while IFS= read -r reference; do
+      [ -n "$reference" ] || continue
+      [ -r "$(dirname "$source_file")/$reference" ] || return 1
+      cat "$(dirname "$source_file")/$reference" >/dev/null || return 1
+    done <<< "$references"
+  done
+}
+
+echo "T2-e: career-os 첫 전역 연결과 내부 참조 읽기"
+H="$(newhome)"; CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1
+[ -L "$H/skills/career-os" ]; check "$?" "0" "career-os 링크 생성됨"
+career_pack_matches "$H/skills/career-os"; check "$?" "0" "career-os 필수 파일 9개 읽기와 원본 일치"
+career_refs_readable "$H/skills/career-os"; check "$?" "0" "career-os 내부 상대 참조 읽기"
+grep -q '"skills/career-os"' "$H/.grandeclip-managed.json"; check "$?" "0" "career-os 관리 항목 기록됨"
+CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1; rc=$?
+check "$rc" "0" "career-os 재실행 종료코드 0"
+[ -L "$H/skills/career-os" ]; check "$?" "0" "재실행 후 career-os 링크 유효"
+career_pack_matches "$H/skills/career-os"; check "$?" "0" "재실행 후 career-os 묶음 보존"
+rm -rf "$H"
+
+echo "T2-f: career-os 동명 개인 폴더가 있는 새 설치"
+H="$(newhome)"; mkdir -p "$H/skills/career-os"
+printf 'USER CAREER SKILL\n' > "$H/skills/career-os/SKILL.md"
+out="$(CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" 2>&1)"
+[ ! -L "$H/skills/career-os" ]; check "$?" "0" "career-os 개인 폴더를 링크로 교체하지 않음"
+grep -q 'USER CAREER SKILL' "$H/skills/career-os/SKILL.md"; check "$?" "0" "career-os 개인 파일 보존"
+echo "$out" | grep -q 'skills/career-os (이미 다른 내용이 있어 건너뜀)'; check "$?" "0" "career-os 충돌 이름 보고"
+grep -q '"skills/career-os"' "$H/.grandeclip-managed.json"; check "$?" "1" "개인 career-os를 관리 항목으로 기록하지 않음"
+rm -rf "$H"
+
+echo "T2-g: career-os 관리 링크를 개인 폴더로 바꾼 뒤 재실행"
+H="$(newhome)"; CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1
+rm -f "$H/skills/career-os"
+mkdir -p "$H/skills/career-os"
+printf 'MY REPLACED CAREER SKILL\n' > "$H/skills/career-os/SKILL.md"
+out="$(CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" 2>&1)"
+[ ! -L "$H/skills/career-os" ]; check "$?" "0" "교체한 career-os 개인 폴더 유지"
+grep -q 'MY REPLACED CAREER SKILL' "$H/skills/career-os/SKILL.md"; check "$?" "0" "교체한 career-os 개인 파일 보존"
+echo "$out" | grep -q 'skills/career-os (이미 다른 내용이 있어 건너뜀)'; check "$?" "0" "교체 후 career-os 충돌 이름 보고"
+grep -q '"skills/career-os"' "$H/.grandeclip-managed.json"; check "$?" "1" "교체한 career-os를 관리 항목에서 제외"
+rm -rf "$H"
+
 echo "T3-a: CLAUDE.md 없을 때 — 관리 블록과 함께 생성"
 H="$(newhome)"; CLAUDE_GLOBAL_DIR="$H" bash "$GLOBALIZE" >/dev/null 2>&1
 [ -f "$H/CLAUDE.md" ]; check "$?" "0" "CLAUDE.md 생성됨"
