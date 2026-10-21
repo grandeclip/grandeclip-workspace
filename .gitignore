@@ -29,3 +29,6 @@ __pycache__/
 
 # 개인 위키 위치 설정 (자료 본문 미포함)
 .wiki-local.json
+
+# 자동 준비한 로컬 Node.js (공개 ZIP에 포함하지 않음)
+.workshop-runtime/

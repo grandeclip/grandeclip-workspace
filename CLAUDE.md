@@ -33,7 +33,7 @@ Claude는 작업을 막지 말되, 아래에 어긋나는 요청에는 **거부�
 
 ## 개인 위키
 
-“위키 열어줘” 요청에는 `README.md`의 **내 위키 열기**를 따릅니다. Node.js 20 이상을 확인한 뒤 루트에서 `node 00-system/wiki-app/server.mjs`를 실행하고 출력된 로컬 주소를 엽니다. Node.js가 없으면 공식 설치 방법을 안내하고, AI 도구의 CLI·로그인 상태는 실제 화면에서 확인합니다.
+“위키 열어줘” 요청에는 `README.md`의 **내 위키 열기**를 따릅니다. 루트에서 macOS/Linux는 `bash 00-system/02-scripts/run-wiki.sh`, Windows는 `powershell -NoProfile -ExecutionPolicy Bypass -File 00-system/02-scripts/run-wiki.ps1`을 실행하고 출력된 로컬 주소를 엽니다. 런처가 Node.js도 자동 준비하므로 별도 수동 설치를 먼저 요구하지 않습니다. 기존 Codex·Claude Code의 CLI 로그인을 재사용하며, 화면에서 CLI가 없거나 로그인이 없거나 만료된 것으로 확인됐을 때만 필요한 조치를 안내합니다.
 
 위키 스킬은 `.claude/skills/karpathy-llm-wiki/`에 있습니다. 직접 선택하거나 경로로 지정한 자료만 추가하고 원본을 보존합니다. 개인 위키와 대화가 저장되는 `30-knowledge/36-personal-wiki/`는 Git에서 제외합니다.
 

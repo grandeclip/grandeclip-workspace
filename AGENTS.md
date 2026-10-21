@@ -12,8 +12,8 @@ Claude Code·Codex에서 업무와 수업 실습에 사용하는 폴더입니다
 
 ## 위키를 열어달라고 요청받았을 때
 
-- `README.md`의 **내 위키 열기**를 따릅니다. Node.js 20 이상을 확인한 뒤 워크스페이스 루트에서 `node 00-system/wiki-app/server.mjs`를 실행하고 출력된 로컬 주소를 엽니다.
-- Node.js가 없으면 공식 설치 방법을 안내합니다. AI 도구의 CLI와 로그인은 화면에서 실제 상태를 확인합니다. 파일 준비만 확인한 상태를 실행 가능으로 설명하지 않습니다.
+- `README.md`의 **내 위키 열기**를 따릅니다. 워크스페이스 루트에서 macOS/Linux는 `bash 00-system/02-scripts/run-wiki.sh`, Windows는 `powershell -NoProfile -ExecutionPolicy Bypass -File 00-system/02-scripts/run-wiki.ps1`을 실행하고 출력된 로컬 주소를 엽니다. 런처가 Node.js도 자동 준비하므로 별도 수동 설치를 먼저 요구하지 않습니다.
+- 위키는 기존 Codex·Claude Code의 CLI 로그인을 재사용합니다. 화면에서 실제 상태를 확인하고, CLI가 없거나 로그인이 없거나 만료된 경우에만 필요한 조치를 안내합니다. 파일 준비만 확인한 상태를 실행 가능으로 설명하지 않습니다.
 - 직접 선택하거나 경로로 지정한 자료만 추가합니다. 개인 위키는 `30-knowledge/36-personal-wiki/`에 보관하고 Git에 넣지 않습니다. 다른 폴더 전체를 임의로 수집하지 않습니다.
 
 ## 작업 규칙

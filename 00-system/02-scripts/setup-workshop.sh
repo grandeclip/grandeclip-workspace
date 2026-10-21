@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 수업용 파일 준비는 오프라인으로 수행한다. 위키 실행 환경과 AI 로그인은 별도로 확인한다.
+# 번들은 로컬에서 준비하고, 필요한 경우 공식 Node.js를 워크스페이스에 내려받는다.
 set -euo pipefail
 usage() { printf '%s\n' '사용법: bash 00-system/02-scripts/setup-workshop.sh --tool claude|codex [--check] [--yes]'; }
 fail() { printf '오류: %s\n' "$*" >&2; exit 1; }
@@ -33,6 +33,7 @@ check_required() {
 check_required "$ROOT/.claude/skills/career-os" "${CAREER_REQUIRED[@]}"
 check_required "$ROOT/.claude/skills/karpathy-llm-wiki" "${WIKI_REQUIRED[@]}"
 check_required "$ROOT/00-system/wiki-app" "${APP_REQUIRED[@]}"
+check_required "$SCRIPT_DIR" ensure-wiki-runtime.sh ensure-wiki-runtime.ps1 node-runtime-manifest.txt run-wiki.sh run-wiki.ps1
 if [ "$TOOL" = claude ]; then check_required "$ROOT/.claude/skills/skill-creator" "${CREATOR_REQUIRED[@]}"; fi
 [ "$missing" -eq 0 ] || exit 1
 shopt -s dotglob nullglob
@@ -56,12 +57,14 @@ set_bundle() { SOURCE="$ROOT/.claude/skills/$1"; SOURCE_FILES=(); SOURCE_DIRS=("
 for bundle in "${BUNDLES[@]}"; do set_bundle "$bundle"; done
 scan_bundle "$ROOT/00-system/wiki-app" "$ROOT/00-system/wiki-app" 0
 runtime_status() {
-  local major=""
-  if command -v node >/dev/null 2>&1; then major="$(node -p 'Number(process.versions.node.split(".")[0])' 2>/dev/null || true)"; fi
-  case "$major" in ''|*[!0-9]*) printf '%s\n' '위키 실행 환경 미확인: Node.js 20 이상이 필요합니다. 초기 설정 AI에게 공식 Node.js 설치 안내를 요청해 주세요.' ;;
-    *) if [ "$major" -ge 20 ]; then printf '위키 실행 환경: Node.js %s 확인. AI 도구 로그인은 위키를 열 때 확인합니다.\n' "$major"; else printf '위키 실행 환경 미준비: Node.js %s입니다. 20 이상을 설치해 주세요.\n' "$major"; fi ;;
-  esac
-  printf '%s\n' '위키 열기: node 00-system/wiki-app/server.mjs (현재 사용할 Claude Code 또는 Codex CLI에 로그인이 필요합니다.)'
+  local node_path=""
+  if [ "$CHECK_ONLY" -eq 1 ]; then
+    node_path="$("$BASH" "$SCRIPT_DIR/ensure-wiki-runtime.sh" --check)" || { printf '%s\n' '위키 실행 환경 미준비: --check 없이 초기 설정을 진행해 주세요.' >&2; return 1; }
+  else
+    node_path="$("$BASH" "$SCRIPT_DIR/ensure-wiki-runtime.sh")" || { printf '%s\n' '스킬 파일은 준비했지만 위키 실행 환경 준비를 마치지 못했습니다.' >&2; return 1; }
+  fi
+  printf '위키 실행 환경 준비 확인: %s\n' "$node_path"
+  printf '%s\n' '위키 열기: bash 00-system/02-scripts/run-wiki.sh' '이미 로그인된 Codex 또는 Claude Code 계정을 재사용합니다. 인증이 없거나 만료됐을 때만 로그인해 주세요.'
 }
 ready() {
   if [ "$TOOL" = claude ]; then printf '%s\n' '파일 준비 확인: .claude/skills/career-os, .claude/skills/karpathy-llm-wiki, .claude/skills/skill-creator';

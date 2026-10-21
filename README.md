@@ -22,7 +22,7 @@
 
 ### 1. 워크스페이스 받기·열기
 
-[워크스페이스 ZIP 받기](https://github.com/grandeclip/grandeclip-workspace/archive/refs/heads/main.zip)를 눌러 압축을 풀고, `grandeclip-workspace-main` 폴더를 **Claude Code 또는 Codex**에서 엽니다. ZIP을 받는 데 Git은 필요하지 않습니다. 사용할 AI 도구에 먼저 로그인해 주세요. 위키 화면 실행에는 Node.js 20 이상이 필요하며 초기 설정에서 확인합니다.
+[워크스페이스 ZIP 받기](https://github.com/grandeclip/grandeclip-workspace/archive/refs/heads/main.zip)를 눌러 압축을 풀고, `grandeclip-workspace-main` 폴더를 **Claude Code 또는 Codex**에서 엽니다. ZIP을 받는 데 Git은 필요하지 않습니다. 위키에 필요한 Node.js도 초기 설정에서 자동으로 준비합니다.
 
 ### 2. 초기 설정 요청하기
 
@@ -35,7 +35,7 @@ README.md를 읽고 수업용 초기 설정을 진행해줘.
 마치면 새 대화에서 확인할 방법을 알려줘.
 ```
 
-Claude Code에서는 `/setup-workspace`로 시작해도 됩니다. 수업용 설정은 포함된 스킬만 준비하며 회사용 플러그인 전체 설치·프로필 질문·Daily Note 생성·컴퓨터 전역 적용은 하지 않습니다.
+Claude Code에서는 `/setup-workspace`로 시작해도 됩니다. 수업용 설정은 포함된 스킬과 위키 실행 환경을 준비합니다. 회사용 플러그인 전체 설치·프로필 질문·Daily Note 생성·컴퓨터 전역 적용은 하지 않습니다.
 
 ### 3. 새 대화에서 확인하기
 
@@ -78,7 +78,7 @@ Windows 명령의 실행 정책 옵션은 해당 PowerShell 프로세스에만 �
 5. 성공한 뒤 같은 명령의 읽기 전용 확인을 한 번 실행합니다. 누락·충돌·읽기 실패가 남으면 해당 경로와 필요한 조치만 알리고 준비 완료로 표시하지 않습니다. 설치를 무한 반복하거나 개인 설정·원본 스킬을 덮지 않습니다.
 6. 파일이 준비됐으면 “파일 준비를 마쳤어요. 같은 폴더에서 새 대화를 열고 스킬을 확인해 주세요.”라고 짧게 안내합니다. 새 대화의 확인 요청에는 실제 사용 가능한 스킬 목록의 경로와 지침을 읽고 답합니다. Codex 내장 `skill-creator`가 목록에 없다면 미확인으로 남기며 Claude용 사본으로 덮지 않습니다.
 
-7. 위키 앱의 필수 파일과 Node.js 20 이상을 확인합니다. 스킬 파일 준비, 위키 실행 환경, AI 도구 로그인을 구분해 보고합니다. Node.js가 없거나 버전이 낮으면 [공식 다운로드](https://nodejs.org/en/download)를 안내하고, 실행 환경이 미준비임을 알립니다. CLI와 로그인은 위키를 열었을 때 실제 상태로 확인하며 설치 스크립트만 성공했다고 사용 가능으로 표시하지 않습니다.
+7. 위키 앱의 필수 파일과 실행 환경을 확인합니다. 설정 스크립트는 `ensure-wiki-runtime.sh` 또는 `ensure-wiki-runtime.ps1`로 Node.js를 자동 준비합니다. PATH에 Node.js 22 이상이 있으면 재사용하고, 없거나 버전이 낮으면 공식 Node.js 24.22.1 LTS를 받아 해시를 검사한 뒤 `.workshop-runtime/`에 둡니다. 처음 받아야 할 때는 인터넷이 필요합니다. 기존 Node.js·전역 PATH·시스템 설정은 바꾸지 않으며 관리자 권한을 요구하지 않습니다. 준비가 실패하면 해당 원인을 알리고 완료로 표시하지 않습니다. `--check` 또는 `-Check`는 다운로드나 파일 변경 없이 확인만 합니다. AI 도구 로그인은 위키를 열었을 때 실제 상태로 확인합니다.
 
 이 과정에서 취업 준비 스킬을 실행하거나 회사·개인 자료를 조사하지 않습니다. 기존 `CLAUDE.md`, `AGENTS.md`, 개인 파일과 전역 설정은 보존합니다.
 
@@ -88,13 +88,16 @@ Windows 명령의 실행 정책 옵션은 해당 PowerShell 프로세스에만 �
 
 ## 내 위키 열기
 
-초기 설정을 마친 뒤 AI에게 **“위키 열어줘”**라고 요청하세요. 개념 지도에서 문서를 탐색하고, 읽는 문서를 바탕으로 바로 질문할 수 있습니다. 화면에서 Codex 또는 Claude를 선택하면 해당 CLI의 설치·로그인 상태를 확인합니다.
+초기 설정을 마친 뒤 AI에게 **“위키 열어줘”**라고 요청하세요. 개념 지도에서 문서를 탐색하고, 읽는 문서를 바탕으로 바로 질문할 수 있습니다. AI는 워크스페이스 루트에서 OS에 맞는 명령을 실행한 뒤 출력된 로컬 주소를 엽니다.
 
-```sh
-node 00-system/wiki-app/server.mjs
-```
+| 환경 | 위키 실행 |
+|---|---|
+| macOS/Linux | `bash 00-system/02-scripts/run-wiki.sh` |
+| Windows | `powershell -NoProfile -ExecutionPolicy Bypass -File 00-system/02-scripts/run-wiki.ps1` |
 
-AI는 워크스페이스 루트에서 이 명령을 실행한 뒤 출력된 로컬 주소를 엽니다. Node.js 20 이상과 사용할 AI 도구의 CLI·로그인이 필요합니다. 추가 Node 패키지를 설치할 필요는 없습니다. 기본 포트가 사용 중이면 `--port 3114`를 붙입니다.
+이 명령도 Node.js가 준비돼 있는지 확인하고, 필요하면 워크스페이스 안에 자동으로 받습니다. 추가 Node 패키지를 설치할 필요는 없습니다. 기본 포트가 사용 중이면 `--port 3114`를 붙입니다.
+
+**이미 Codex 또는 Claude Code에 로그인했다면 위키도 그 로그인을 그대로 사용합니다.** API 키나 위키용 회원가입, 매번 하는 로그인은 필요 없습니다. 화면에서 선택한 CLI가 없거나 로그인이 없거나 만료된 경우에만 설치·본인 로그인을 안내합니다. Claude 웹·데스크톱 앱의 로그인과 Claude Code 로그인은 별개입니다. 이 워크스페이스의 Node.js는 위키 서버를 실행하기 위한 것이며, Claude Code의 네이티브 설치에 필요한 것은 아닙니다. [Codex 인증 안내](https://learn.chatgpt.com/docs/auth), [Claude Code 인증 안내](https://code.claude.com/docs/en/authentication).
 
 **자료 추가**에서 직접 선택한 파일만 가져옵니다. Markdown·TXT·HTML·CSV·JSON은 바로 읽으며, PDF는 `pdftotext`, DOCX는 Python 3이 있을 때 읽습니다. 지원하지 않는 형식이나 읽지 못한 파일은 화면에 이유를 보여줍니다.
 

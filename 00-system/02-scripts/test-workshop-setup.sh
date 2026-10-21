@@ -45,6 +45,8 @@ def snapshot(root):
 
 
 def write_executable(path, content):
+    if path.is_symlink():
+        path.unlink()
     path.write_text('#!/bin/bash\n' + content)
     path.chmod(0o755)
 
@@ -58,7 +60,7 @@ def fixture(label):
         (workspace / '00-system/02-scripts').mkdir(parents=True)
         for name in ('install.sh', 'install.ps1'):
             shutil.copy2(repo / name, workspace / name)
-        for name in ('setup-workshop.sh', 'setup-workshop.ps1', 'plugins.txt'):
+        for name in ('setup-workshop.sh', 'setup-workshop.ps1', 'plugins.txt', 'ensure-wiki-runtime.sh', 'ensure-wiki-runtime.ps1', 'node-runtime-manifest.txt', 'run-wiki.sh', 'run-wiki.ps1'):
             shutil.copy2(repo / '00-system/02-scripts' / name, workspace / '00-system/02-scripts' / name)
         for name in ('career-os', 'skill-creator', 'karpathy-llm-wiki'):
             shutil.copytree(repo / '.claude/skills' / name, workspace / '.claude/skills' / name)
@@ -76,13 +78,14 @@ def fixture(label):
         (bundle / '.bundled-note').write_text('hidden bundle content\n')
         tool_bin = fixture_root / 'tools'
         tool_bin.mkdir()
-        for command in ('dirname', 'cat', 'cmp', 'cp', 'mv', 'mktemp', 'rm', 'rmdir', 'mkdir', 'sed', 'awk', 'tr', 'grep', 'head'):
+        for command in ('bash', 'uname', 'dirname', 'cat', 'cmp', 'cp', 'mv', 'mktemp', 'rm', 'rmdir', 'mkdir', 'sed', 'awk', 'tr', 'grep', 'head'):
             executable = shutil.which(command)
             if not executable:
                 raise AssertionError('test requires: ' + command)
             (tool_bin / command).symlink_to(executable)
+        write_executable(tool_bin / 'node', 'if [ "$1" = "--version" ]; then printf "v22.0.0\\n"; else printf "22\\n"; fi\n')
         log = fixture_root / 'forbidden-commands.log'
-        for command in ('git', 'claude', 'codex', 'curl', 'wget', 'winget', 'xcode-select', 'uname'):
+        for command in ('git', 'claude', 'codex', 'curl', 'wget', 'winget', 'xcode-select'):
             write_executable(tool_bin / command, 'printf "%s\\n" "' + command + ' $*" >> "$WORKSHOP_TEST_LOG"\nexit 97\n')
         environment = dict(os.environ)
         environment.update(PATH=str(tool_bin), WORKSHOP_TEST_LOG=str(log))
@@ -290,12 +293,13 @@ def test_missing_app(backend):
 
 def test_runtime_reporting(backend):
     with fixture('wiki runtime') as (workspace, _, tool_bin, log, environment):
+        (tool_bin / 'node').unlink()
         before = snapshot(workspace)
-        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), text='위키 실행 환경 미확인')
-        write_executable(tool_bin / 'node', 'printf "18\\n"\n')
-        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), text='위키 실행 환경 미준비')
-        write_executable(tool_bin / 'node', 'printf "22\\n"\n')
-        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), text='위키 실행 환경: Node.js 22 확인')
+        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), False, '위키 실행 환경 미준비')
+        write_executable(tool_bin / 'node', 'if [ "$1" = "--version" ]; then printf "v18.0.0\\n"; else printf "18\\n"; fi\n')
+        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), False, '위키 실행 환경 미준비')
+        write_executable(tool_bin / 'node', 'if [ "$1" = "--version" ]; then printf "v22.0.0\\n"; else printf "22\\n"; fi\n')
+        expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--check'], backend), text='위키 실행 환경 준비 확인:')
         assert snapshot(workspace) == before
         assert_offline(log)
 
@@ -316,6 +320,25 @@ def test_legacy(_):
         assert snapshot(workspace) == before
         assert log.read_text().splitlines() == ['claude --version', 'claude plugin list --json']
 
+
+
+def test_launcher_runtime(_):
+    with fixture('launcher') as (workspace, fixture_root, tool_bin, log, environment):
+        prepared = fixture_root / 'prepared node with spaces'
+        prepared.mkdir()
+        runtime = prepared / 'node'
+        arguments = fixture_root / 'launcher-arguments.txt'
+        environment['WORKSHOP_TEST_RUNTIME_NODE'] = str(runtime)
+        environment['WORKSHOP_TEST_LAUNCHER_ARGS'] = str(arguments)
+        write_executable(runtime, 'case "$1" in\n  */server.mjs) shift; printf "%s\\n" "$@" > "$WORKSHOP_TEST_LAUNCHER_ARGS"; codex --version ;;\n  */codex) printf "prepared-node-cli-ok\\n" ;;\n  *) exit 98 ;;\nesac\n')
+        write_executable(tool_bin / 'codex', 'unused\n')
+        (tool_bin / 'codex').write_text('#!/usr/bin/env node\n')
+        write_executable(workspace / '00-system/02-scripts/ensure-wiki-runtime.sh', 'printf "%s\\n" "$WORKSHOP_TEST_RUNTIME_NODE"\n')
+        result = subprocess.run(['/bin/bash', str(workspace / '00-system/02-scripts/run-wiki.sh'), '--root', 'my notes with spaces', '--port', '3181'], cwd=fixture_root, env=environment, text=True, capture_output=True)
+        expect(result, text='prepared-node-cli-ok')
+        assert arguments.read_text().splitlines() == ['--root', 'my notes with spaces', '--port', '3181']
+        assert environment['PATH'] == str(tool_bin)
+        assert_offline(log)
 
 
 def test_windows_command_contract(_):
@@ -354,7 +377,7 @@ cases = [
     ('personal destination conflict preserves bytes', test_personal_conflict),
     ('wiki conflict preflight preserves career and personal wiki', test_wiki_conflict),
     ('missing app fails before mutation', test_missing_app),
-    ('files readiness and missing/old/current Node runtime differ', test_runtime_reporting),
+    ('runtime check rejects missing/old Node without writes or network', test_runtime_reporting),
     ('personal extra files survive identical rerun', test_personal_extra),
     ('symlink ancestors block external writes', test_symlink_block),
     ('entry/helper invalid flags and help', test_arguments),
@@ -364,6 +387,7 @@ for backend in ['bash'] + (['powershell'] if pwsh else []):
         check(name, function, backend)
 check('staging copy error / corruption / move error clean up', test_copy_failures, 'bash')
 check('legacy --help / --check / --yes routing', test_legacy, 'bash')
+check('launcher passes selected runtime to npm CLI without changing caller PATH', test_launcher_runtime, 'bash')
 check('Windows process policy command / company --work contract', test_windows_command_contract, 'static')
 if not pwsh:
     print('SKIP PowerShell: pwsh/powershell unavailable; Windows runtime remains unverified.')

@@ -1,6 +1,6 @@
 ---
 description: 수업용 초기 설정. --work를 명시하면 기존 회사 업무용 전체 설정
-allowed-tools: Bash(bash install.sh:*), Bash(node 00-system/wiki-app/server.mjs:*), Bash(powershell:*), Bash(bash 00-system/02-scripts/globalize.sh:*), Read, Write, Edit, Glob
+allowed-tools: Bash(bash install.sh:*), Bash(bash 00-system/02-scripts/run-wiki.sh:*), Bash(powershell:*), Bash(bash 00-system/02-scripts/globalize.sh:*), Read, Write, Edit, Glob
 ---
 
 # 워크스페이스 초기 설정
@@ -10,9 +10,9 @@ allowed-tools: Bash(bash install.sh:*), Bash(node 00-system/wiki-app/server.mjs:
 사용자가 `--work` 또는 회사 업무용 전체 설정을 명시하지 않았다면 이 절만 수행하고 끝냅니다.
 
 1. `README.md`의 **AI 초기 설정 절차**를 읽습니다.
-2. 현재 Claude Code 환경과 OS에 맞는 `--workshop --tool claude` 또는 `-Workshop -Tool Claude` 명령으로 포함된 스킬을 확인합니다. 실행 결과가 실패하면 실제 경로와 필요한 조치만 안내합니다.
+2. 현재 Claude Code 환경과 OS에 맞는 `--workshop --tool claude` 또는 `-Workshop -Tool Claude` 명령으로 포함된 스킬과 위키 실행 환경을 준비합니다. Node.js는 필요할 때 공식 배포본을 받아 워크스페이스 안에 준비하며, 이때 인터넷이 필요합니다. 실행 결과가 실패하면 실제 원인과 필요한 조치만 안내하고 완료로 표시하지 않습니다.
 3. 파일 준비 뒤에는 같은 폴더의 새 대화에서 `career-os`, `karpathy-llm-wiki`, `skill-creator`의 실제 인식을 확인하도록 안내합니다.
-4. 스킬 파일 준비와 위키 실행 환경을 구분합니다. Node.js 20 이상이 없으면 `README.md`의 공식 설치 안내를 보여주며 위키 실행 준비가 끝났다고 말하지 않습니다. 위키를 열어달라는 요청을 받은 경우에만 **내 위키 열기** 절차로 로컬 서버를 실행하고 실제 CLI·로그인 상태를 확인합니다.
+4. 같은 명령의 `--check` 또는 `-Check`로 다운로드·파일 변경 없이 준비 상태를 확인합니다. 위키를 열어달라는 요청을 받은 경우에만 **내 위키 열기**의 런처로 로컬 서버를 실행합니다. 위키는 기존 CLI 로그인을 재사용하므로 추가 로그인을 먼저 요구하지 않습니다. 화면에서 CLI가 없거나 로그인이 없거나 만료된 것으로 확인됐을 때만 필요한 조치를 안내합니다.
 
 수업용 설정에서는 아래 업무용 흐름, 외부 플러그인 설치, 개인 프로필·Daily Note 생성, 전역 적용을 실행하지 않습니다. 이름·직무를 질문하지 않고 기존 파일과 설정을 보존합니다.
 

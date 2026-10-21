@@ -1,4 +1,4 @@
-﻿# 수업용 파일 준비는 오프라인으로 수행한다. PowerShell 5.1 이상.
+﻿# 번들은 로컬에서 준비하고 필요한 경우 공식 Node.js를 내려받는다. PowerShell 5.1 이상.
 [CmdletBinding()]
 param(
   [ValidateSet('Claude', 'Codex')][string]$Tool,
@@ -76,14 +76,13 @@ function Compare-Bundle([string]$Target) {
   }
 }
 function Write-RuntimeStatus {
-  $major = 0
-  if (Get-Command node -ErrorAction SilentlyContinue) {
-    try { $version = & node -p 'Number(process.versions.node.split(".")[0])' 2>$null; if ($LASTEXITCODE -eq 0) { $null = [int]::TryParse(($version | Select-Object -First 1), [ref]$major) } } catch { $major = 0 }
-  }
-  if ($major -ge 20) { Write-Host "위키 실행 환경: Node.js $major 확인. AI 도구 로그인은 위키를 열 때 확인합니다." }
-  elseif ($major -gt 0) { Write-Host "위키 실행 환경 미준비: Node.js $major 입니다. 20 이상을 설치해 주세요." }
-  else { Write-Host '위키 실행 환경 미확인: Node.js 20 이상이 필요합니다. 초기 설정 AI에게 공식 Node.js 설치 안내를 요청해 주세요.' }
-  Write-Host '위키 열기: node 00-system/wiki-app/server.mjs (현재 사용할 Claude Code 또는 Codex CLI에 로그인이 필요합니다.)'
+  $runtimeOptions = @{}
+  if ($Check) { $runtimeOptions['Check'] = $true }
+  $nodePath = & (Join-Path $PSScriptRoot 'ensure-wiki-runtime.ps1') @runtimeOptions
+  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace([string]$nodePath)) { throw '위키 실행 환경 미준비: -Check 없이 초기 설정을 진행해 주세요.' }
+  Write-Host "위키 실행 환경 준비 확인: $nodePath"
+  Write-Host '위키 열기: powershell -NoProfile -ExecutionPolicy Bypass -File 00-system/02-scripts/run-wiki.ps1'
+  Write-Host '이미 로그인된 Codex 또는 Claude Code 계정을 재사용합니다. 인증이 없거나 만료됐을 때만 로그인해 주세요.'
 }
 function Write-Ready {
   if ($Tool -eq 'Claude') { Write-Host '파일 준비 확인: .claude/skills/career-os, .claude/skills/karpathy-llm-wiki, .claude/skills/skill-creator' }
@@ -104,6 +103,10 @@ try {
   foreach ($relative in $AppRequired) {
     $path = Join-Path (Join-Path $Root '00-system/wiki-app') $relative
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { Write-Host "누락: $path"; $missing = $true }
+  }
+  foreach ($helper in @('ensure-wiki-runtime.sh', 'ensure-wiki-runtime.ps1', 'node-runtime-manifest.txt', 'run-wiki.sh', 'run-wiki.ps1')) {
+    $helperPath = Join-Path $PSScriptRoot $helper
+    if (-not (Test-Path -LiteralPath $helperPath -PathType Leaf)) { Write-Host "누락: $helperPath"; $missing = $true }
   }
   $creator = Join-Path $Root '.claude/skills/skill-creator'
   if ($Tool -eq 'Claude') {
