@@ -13,7 +13,7 @@ async function fixture(fn){
  const providers={providerStatus:async id=>({id,installed:true,authenticated:true,message:'연결됨'}),runProvider:async ({prompt})=>({text:prompt.includes('"articles"')?JSON.stringify({articles:[{path:'wiki/learning/recall.md',title:'인출 연습',markdown:'# 인출 연습\n자료를 덮고 설명한다.\n\n[원문](../../raw/example.md)'}],summary:'개념 정리'}):JSON.stringify({answer:'자료를 덮고 설명해요. [시험 자료](raw/example.md)',citations:[{id:'raw/example.md',quote:'자료를 덮고 설명한다.'}],suggestions:['어떻게 활용할까?']})})};
  await writeFile(path.join(root,'index.html'),'<html lang="ko">내 위키</html>');
  const app=createApplication({store,providers,skillText:'원자료를 보존한다.',articleTemplate:'제목과 출처',publicDir:root});
- try{await fn({root,app,docs,providers,getImports:()=>imports,getCommits:()=>commits});}finally{await rm(root,{recursive:true,force:true});}
+ try{await fn({root,app,docs,providers,store,getImports:()=>imports,getCommits:()=>commits});}finally{await rm(root,{recursive:true,force:true});}
 }
 function boot(app){return app.handle(new Request('http://127.0.0.1:3113/'));}
 async function session(app){const response=await boot(app);const cookie=response.headers.get('set-cookie').split(';')[0];const state=await app.handle(new Request('http://127.0.0.1:3113/api/state',{headers:{cookie}}));return {cookie,csrf:(await state.json()).csrfToken};}
@@ -79,4 +79,17 @@ test('simultaneous requests cannot start two model runs while authentication is 
  const responses=await Promise.all([1,2].map(()=>app.handle(request('/api/chat',{...auth,body:{provider:'codex',question:'알려줘'}}))));
  assert.equal(responses.filter(response=>response.status===409).length,1);release();
  await Promise.all(responses.map(response=>response.text()));assert.equal(executions,1);
+}));
+
+
+test('state exposes current document import readiness before a student uploads any files', () => fixture(async ({app,store,root,getImports}) => {
+  store.getImportCapabilities = async () => ({pdf:{available:false},docx:{available:true}});
+  const auth = await session(app);
+  const state = await (await app.handle(request('/api/state', auth))).json();
+  assert.deepEqual(state.importCapabilities, {pdf:{available:false},docx:{available:true}});
+  assert.equal(state.wikiRoot, root);
+  assert.equal(getImports(), 0);
+  store.getImportCapabilities = async () => ({pdf:{available:true},docx:{available:true}});
+  const refreshed = await (await app.handle(request('/api/state', auth))).json();
+  assert.equal(refreshed.importCapabilities.pdf.available, true);
 }));

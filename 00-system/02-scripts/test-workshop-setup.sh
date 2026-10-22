@@ -283,12 +283,13 @@ def test_wiki_conflict(backend):
 
 
 def test_missing_app(backend):
-    with fixture('missing wiki app') as (workspace, _, _, log, environment):
-        (workspace / '00-system/wiki-app/server.mjs').unlink()
-        before = snapshot(workspace)
-        expect(run(workspace, environment, ['--workshop', '--tool', 'codex'], backend), False, 'server.mjs')
-        assert snapshot(workspace) == before
-        assert_offline(log)
+    for relative in ('server.mjs', 'lib/import-tools.mjs'):
+        with fixture('missing wiki app') as (workspace, _, _, log, environment):
+            (workspace / '00-system/wiki-app' / relative).unlink()
+            before = snapshot(workspace)
+            expect(run(workspace, environment, ['--workshop', '--tool', 'codex'], backend), False, relative)
+            assert snapshot(workspace) == before
+            assert_offline(log)
 
 
 def test_runtime_reporting(backend):

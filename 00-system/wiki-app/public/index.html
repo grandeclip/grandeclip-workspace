@@ -24,6 +24,13 @@
  <div class="top-actions"><div class="provider-control"><label class="sr-only" for="provider">사용할 AI</label><select id="provider"><option value="codex">Codex</option><option value="claude">Claude</option></select></div><button class="primary-button" id="add-files">자료 추가</button><input type="file" id="file-input" multiple accept=".md,.markdown,.txt,.html,.htm,.csv,.json,.pdf,.docx" hidden></div>
 </header>
 <div class="connection-note" id="connection-note" role="status"><span class="connection-dot"></span><span id="connection-message">위키와 AI 연결을 확인하고 있어요.</span><button id="refresh-state">다시 확인</button></div>
+<details class="file-preparation"><summary>추가할 수 있는 자료</summary><div>
+ <p>Markdown·TXT·HTML·CSV·JSON은 바로 읽을 수 있어요.</p>
+ <p id="wiki-root-location"></p>
+ <p id="import-preparation" role="status">PDF·Word 파일을 읽을 준비가 됐는지 확인 중이에요.</p>
+ <p>준비가 필요하면 Claude Code·Codex에 이 안내를 보여주거나 텍스트 파일로 내보내세요. 준비한 뒤 위의 ‘다시 확인’을 누르세요.</p>
+ <p>HWP·HWPX와 스캔한 문서는 텍스트로 변환해 추가하세요.</p>
+</div></details>
 <nav class="mobile-tabs" aria-label="위키 화면"><button data-panel="map" aria-selected="true">개념 지도</button><button data-panel="document" aria-selected="false">문서 읽기</button><button data-panel="chat" aria-selected="false">질문하기</button></nav>
 <main class="workspace">
  <section class="panel map-panel mobile-active" data-panel-name="map" aria-label="관련 개념 탐색">

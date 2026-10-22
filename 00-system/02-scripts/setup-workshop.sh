@@ -20,7 +20,7 @@ BUNDLES=(career-os karpathy-llm-wiki)
 CAREER_REQUIRED=(SKILL.md skills/company-research/SKILL.md skills/job-scout/SKILL.md skills/experience-extract/SKILL.md skills/application-build/SKILL.md agents/research.md agents/experience.md agents/writing.md references/runtime-contract.md)
 WIKI_REQUIRED=(SKILL.md LICENSE references/raw-template.md references/article-template.md references/index-template.md references/archive-template.md references/workshop.md scripts/check_evidence.py)
 CREATOR_REQUIRED=(SKILL.md LICENSE.txt agents/analyzer.md agents/comparator.md agents/grader.md assets/eval_review.html eval-viewer/generate_review.py eval-viewer/viewer.html references/schemas.md scripts/__init__.py scripts/aggregate_benchmark.py scripts/generate_report.py scripts/improve_description.py scripts/package_skill.py scripts/quick_validate.py scripts/run_eval.py scripts/run_loop.py scripts/utils.py)
-APP_REQUIRED=(server.mjs lib/application.mjs lib/providers.mjs lib/store.mjs public/index.html public/app.js public/style.css package.json)
+APP_REQUIRED=(server.mjs lib/application.mjs lib/providers.mjs lib/store.mjs lib/import-tools.mjs public/index.html public/app.js public/style.css package.json)
 printf '현재 도구: %s\n' "$TOOL"
 missing=0
 check_required() {

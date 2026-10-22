@@ -1,3 +1,4 @@
+import * as client from '../public/app.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { escapeHTML, resolveDocumentLink, renderMarkdown, consumeNDJSON, quoteDisplayText, findQuoteRanges, importWarnings, readerMarkdown, providerStatusText, graphLabelLines } from '../public/app.js';
@@ -155,4 +156,38 @@ test('graph labels wrap long Korean titles into at most two short lines while sh
   assert.deepEqual(graphLabelLines('온톨로지: 사실과 규칙을 연결하는 추론'), ['온톨로지:', '사실과 규칙…']);
   assert.deepEqual(graphLabelLines('가나다라마바사아자차카타파하거너더러'), ['가나다라마바사', '아자차카타파…']);
   assert.equal(graphLabelLines('  시맨틱   레이어: 지표와 계산기를  연결하기 ').length, 2);
+});
+
+
+test('a first visit selects the authenticated Claude instead of an unavailable Codex', () => {
+  assert.equal(typeof client.chooseInitialProvider, 'function');
+  const providers = [{id:'codex',installed:false,authenticated:false},{id:'claude',installed:true,authenticated:true}];
+  assert.equal(client.chooseInitialProvider(null, providers), 'claude');
+});
+
+test('an explicit tool choice is preserved when a different tool is connected', () => {
+  const providers = [{id:'codex',installed:false,authenticated:false},{id:'claude',installed:true,authenticated:true}];
+  assert.equal(client.chooseInitialProvider('codex', providers), 'codex');
+  assert.equal(client.chooseInitialProvider('invalid', providers), 'claude');
+});
+
+test('without an authenticated tool the installed tool is selected for login guidance', () => {
+  assert.equal(client.chooseInitialProvider(null, [{id:'codex',installed:false,authenticated:false},{id:'claude',installed:true,authenticated:false}]), 'claude');
+  assert.equal(client.chooseInitialProvider(null, []), 'codex');
+  assert.equal(client.chooseInitialProvider(null, [{id:'codex',installed:true,authenticated:true},{id:'claude',installed:true,authenticated:true}]), 'codex');
+});
+
+test('file preparation guidance separates available tools, missing tools and an unconfirmed check', () => {
+  assert.equal(typeof client.importPreparationText, 'function');
+  assert.match(client.importPreparationText({pdf:{available:true},docx:{available:false}}), /PDF.*읽을 수/);
+  assert.match(client.importPreparationText({pdf:{available:true},docx:{available:false}}), /Word.*Python 3.*필요/);
+  assert.match(client.importPreparationText({pdf:{available:false},docx:{available:true}}), /PDF.*변환.*필요/);
+  assert.match(client.importPreparationText({pdf:{available:false},docx:{available:true}}), /Word.*읽을 수/);
+  assert.match(client.importPreparationText(), /확인 중/);
+});
+
+
+test('a saved unavailable tool offers the connected alternative without suggesting a reinstall only', () => {
+  const selected = {id:'codex',installed:false,authenticated:false};
+  assert.match(providerStatusText(selected, 'codex', [selected,{id:'claude',installed:true,authenticated:true}]), /Claude.*선택/);
 });

@@ -2,6 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { PassThrough, Writable } from 'node:stream';
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { createProviderAdapters, parseJsonResult } from '../lib/providers.mjs';
 
 function fakeSpawn(handler) {
@@ -243,4 +247,50 @@ test('auth probe startup failures are unknown rather than incorrectly asking for
   assert.equal(result.installed, true);
   assert.equal(result.authenticated, null);
   assert.match(result.message, /확인/);
+});
+
+
+async function windowsNpmFixture(t, provider, { native = false, defaultPrefix = true } = {}) {
+  const root = await mkdtemp(path.join(tmpdir(), 'wiki CLI 학생 공백 '));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const prefix = path.join(root, defaultPrefix ? 'Roaming/npm' : '별도 npm 경로');
+  const entry = path.join(prefix, 'node_modules', ...(provider === 'codex' ? ['@openai', 'codex', 'bin', 'codex.js'] : ['@anthropic-ai', 'claude-code', 'cli.js']));
+  await mkdir(path.dirname(entry), { recursive: true });
+  await Promise.all([writeFile(entry, '// real package entry'), writeFile(path.join(prefix, provider), '#!/bin/sh\n'), writeFile(path.join(prefix, provider + '.cmd'), '@echo off\n')]);
+  if (native) await writeFile(path.join(prefix, provider + '.exe'), 'native executable fixture');
+  const moduleUrl = new URL('../lib/providers.mjs', import.meta.url).href;
+  const source = `import {EventEmitter} from 'node:events';import {PassThrough,Writable} from 'node:stream';import {createProviderAdapters} from ${JSON.stringify(moduleUrl)};
+Object.defineProperty(process,'platform',{value:'win32'});
+${fakeSpawn.toString()}
+${codexHandshake.toString()}
+const fake=fakeSpawn((call,message)=>{if(call.args.includes('auth')){call.child.stdout.write(JSON.stringify({loggedIn:true,authMethod:'claude.ai'}));call.close();}else codexHandshake(call,message);});
+const env={...process.env,PATH:${JSON.stringify(prefix)},APPDATA:${JSON.stringify(path.join(root, 'Roaming'))},HOME:${JSON.stringify(root)},USERPROFILE:${JSON.stringify(root)}};
+const before=JSON.stringify(env);const a=createProviderAdapters({spawn:fake.spawn,env});const status=await a.providerStatus(${JSON.stringify(provider)},{cwd:${JSON.stringify(root)}});
+console.log(JSON.stringify({status,command:fake.calls[0]?.command,args:fake.calls[0]?.args,shell:fake.calls[0]?.options.shell,environmentUnchanged:before===JSON.stringify(env)}));`;
+  const result = spawnSync(process.execPath, ['--input-type=module'], { input: source, encoding: 'utf8', timeout: 15000 });
+  assert.equal(result.status, 0, result.stderr);
+  return { ...JSON.parse(result.stdout), entry, nativePath: path.join(prefix, provider + '.exe') };
+}
+
+for (const provider of ['codex', 'claude']) test(`Windows npm ${provider} ignores shell shims and uses Node with the package entry in a Korean spaced path`, async t => {
+  const before = process.env.PATH;
+  const result = await windowsNpmFixture(t, provider);
+  assert.equal(result.command, process.execPath);
+  assert.equal(result.args[0], result.entry);
+  assert.equal(result.status.authenticated, true);
+  assert.equal(result.shell, false);
+  assert.equal(result.environmentUnchanged, true);
+  assert.equal(process.env.PATH, before);
+});
+
+test('Windows npm custom prefixes are resolved from PATH instead of only APPDATA', async t => {
+  const result = await windowsNpmFixture(t, 'claude', { defaultPrefix: false });
+  assert.equal(result.command, process.execPath);
+  assert.equal(result.args[0], result.entry);
+});
+
+test('Windows native CLI executables remain preferable to npm shell shims', async t => {
+  const result = await windowsNpmFixture(t, 'claude', { native: true });
+  assert.equal(result.command, result.nativePath);
+  assert.equal(result.args[0], 'auth');
 });

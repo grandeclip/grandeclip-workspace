@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, mkdir, symlink, rm, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { WikiStore } from '../lib/store.mjs';
 
 async function fixture(t) {
@@ -200,6 +200,7 @@ test('unreadable files retain originals and report failure without successful so
 
 test('extracts a real text PDF when pdftotext is installed', async (t) => {
   const { store } = await fixture(t);
+  if (!(await store.getImportCapabilities()).pdf.available) { t.skip('pdftotext is optional and not installed'); return; }
   const stream = 'BT /F1 12 Tf 50 100 Td (A source document.) Tj ET';
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
@@ -213,7 +214,6 @@ test('extracts a real text PDF when pdftotext is installed', async (t) => {
   const xref = Buffer.byteLength(pdf);
   pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.slice(1).map((offset) => `${String(offset).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
   const result = await store.importFiles([file('읽기.pdf', pdf)]);
-  if (result.warnings.some((warning) => warning.includes('설치되지'))) { t.skip('pdftotext is optional and not installed'); return; }
   assert.equal(result.warnings.length, 0);
   assert.match((await store.getDocument(result.added[0])).markdown, /A source document/);
 });
@@ -234,4 +234,26 @@ test('import limits are enforced before any write', async (t) => {
   await assert.rejects(store.importFiles(Array.from({ length: 31 }, (_, i) => file(`${i}.txt`, 'test'))), /30/);
   await assert.rejects(store.importFiles([{ name: 'invalid.txt', content: '@@@', encoding: 'base64' }]));
   assert.deepEqual(await readdir(join(root, 'raw/assets')), []);
+});
+
+
+test('DOCX uses a verified Python 3 available as python without changing the parent environment', async t => {
+  if (process.platform === 'win32') { t.skip('POSIX isolated PATH fixture; Windows command selection has separate coverage'); return; }
+  let python;
+  try { python = execFileSync('python3', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' }).trim(); }
+  catch { t.skip('Python 3 is optional'); return; }
+  const root = await mkdtemp(join(tmpdir(), 'wiki DOCX 학생 공백 '));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const tools = join(root, '실행 도구'); await mkdir(tools); await symlink(python, join(tools, 'python'));
+  const bytes = execFileSync(python, ['-c', 'import io,zipfile,sys\nb=io.BytesIO()\nz=zipfile.ZipFile(b,"w")\nz.writestr("word/document.xml",\'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>내 학습 자료의 개념</w:t></w:r></w:p></w:body></w:document>\')\nz.close()\nsys.stdout.buffer.write(b.getvalue())']);
+  const moduleUrl = new URL('../lib/store.mjs', import.meta.url).href;
+  const source = `import {WikiStore} from ${JSON.stringify(moduleUrl)};const store=await new WikiStore(${JSON.stringify(join(root, '개인 위키'))}).init();const r=await store.importFiles([{name:'학습 자료.docx',content:${JSON.stringify(bytes.toString('base64'))},encoding:'base64'}]);const data=await store.getData();console.log(JSON.stringify({added:r.added.length,warnings:r.warnings,text:data.docs[0]?.markdown}));`;
+  const before = process.env.PATH;
+  const result = spawnSync(process.execPath, ['--input-type=module'], { input: source, env: { ...process.env, PATH: tools }, encoding: 'utf8', timeout: 15000 });
+  assert.equal(result.status, 0, result.stderr);
+  const output = JSON.parse(result.stdout);
+  assert.equal(output.added, 1, JSON.stringify(output.warnings));
+  assert.deepEqual(output.warnings, []);
+  assert.match(output.text, /내 학습 자료의 개념/);
+  assert.equal(process.env.PATH, before);
 });

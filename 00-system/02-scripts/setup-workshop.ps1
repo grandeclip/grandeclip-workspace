@@ -19,7 +19,7 @@ $Required = @{
   'karpathy-llm-wiki' = @('SKILL.md', 'LICENSE', 'references/raw-template.md', 'references/article-template.md', 'references/index-template.md', 'references/archive-template.md', 'references/workshop.md', 'scripts/check_evidence.py')
 }
 $CreatorRequired = @('SKILL.md', 'LICENSE.txt', 'agents/analyzer.md', 'agents/comparator.md', 'agents/grader.md', 'assets/eval_review.html', 'eval-viewer/generate_review.py', 'eval-viewer/viewer.html', 'references/schemas.md', 'scripts/__init__.py', 'scripts/aggregate_benchmark.py', 'scripts/generate_report.py', 'scripts/improve_description.py', 'scripts/package_skill.py', 'scripts/quick_validate.py', 'scripts/run_eval.py', 'scripts/run_loop.py', 'scripts/utils.py')
-$AppRequired = @('server.mjs', 'lib/application.mjs', 'lib/providers.mjs', 'lib/store.mjs', 'public/index.html', 'public/app.js', 'public/style.css', 'package.json')
+$AppRequired = @('server.mjs', 'lib/application.mjs', 'lib/providers.mjs', 'lib/store.mjs', 'lib/import-tools.mjs', 'public/index.html', 'public/app.js', 'public/style.css', 'package.json')
 $SourceFiles = New-Object 'System.Collections.Generic.List[string]'
 $SourceDirs = New-Object 'System.Collections.Generic.List[string]'
 $Source = ''

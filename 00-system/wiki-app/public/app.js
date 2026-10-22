@@ -177,13 +177,29 @@ export function graphLabelLines(value) {
   return lines;
 }
 
-export function providerStatusText(provider, id) {
+export function chooseInitialProvider(preferred, providers = []) {
+  if (['codex', 'claude'].includes(preferred)) return preferred;
+  const supported = providers.filter(provider => ['codex', 'claude'].includes(provider.id));
+  return supported.find(provider => provider.installed && provider.authenticated === true)?.id
+    || supported.find(provider => provider.installed)?.id || 'codex';
+}
+
+export function importPreparationText(capabilities) {
+  if (!capabilities) return 'PDF·Word 파일을 읽을 준비가 됐는지 확인 중이에요.';
+  const pdf = capabilities.pdf?.available === true ? 'PDF는 읽을 수 있어요.' : 'PDF는 텍스트 변환 도구가 필요해요.';
+  const docx = capabilities.docx?.available === true ? 'Word(DOCX)는 읽을 수 있어요.' : 'Word(DOCX)는 Python 3이 필요해요.';
+  return `${pdf} ${docx}`;
+}
+
+export function providerStatusText(provider, id, providers = []) {
   const name = id === 'claude' ? 'Claude Code' : 'Codex';
+  if (provider?.installed && provider.authenticated === true) return `${name} 연결됨 · 자료를 추가하거나 위키에 질문해보세요.`;
+  const alternative = providers.find(item => item.id !== id && item.installed && item.authenticated === true);
+  if (alternative) return `${name} 연결을 확인하지 못했어요. 상단에서 ${alternative.id === 'claude' ? 'Claude' : 'Codex'}를 선택하면 사용할 수 있어요.`;
   if (!provider) return 'AI 연결 상태를 확인하지 못했어요. ‘다시 확인’을 눌러주세요.';
   if (!provider.installed) return `${name} CLI를 설치한 뒤 ‘다시 확인’을 눌러주세요.`;
   if (provider.authenticated === false) return `${name}에서 로그인한 뒤 ‘다시 확인’을 눌러주세요.`;
-  if (provider.authenticated !== true) return `${name}의 실행 상태를 확인하지 못했어요. ‘다시 확인’을 눌러주세요.`;
-  return `${name} 연결됨 · 자료를 추가하거나 위키에 질문해보세요.`;
+  return `${name}의 실행 상태를 확인하지 못했어요. ‘다시 확인’을 눌러주세요.`;
 }
 
 export function importWarnings(result) {
@@ -233,7 +249,9 @@ function boot() {
   const $ = id => document.getElementById(id);
   const icon = id => `<svg class="icon" aria-hidden="true"><use href="#i-${id}"/></svg>`;
   const state = { data: { docs: [], edges: [], providers: [] }, docs: new Map(), selected: null, history: [], position: -1, zoom: 1, view: 'map', fullMap: false, busy: false, abort: null, chats: new Map(), pendingQuestion: null, provider: 'codex', toastTimer: null };
-  try { state.provider = localStorage.getItem('wiki-provider') || 'codex'; } catch {}
+  let preferredProvider = null, initialProviderChosen = false;
+  try { preferredProvider = localStorage.getItem('wiki-provider'); } catch {}
+  state.provider = chooseInitialProvider(preferredProvider);
   $('provider').value = state.provider;
   const currentChat = () => {
     if (!state.chats.has(state.provider)) state.chats.set(state.provider, { messages: [], conversationId: null, suggestions: [] });
@@ -262,7 +280,7 @@ function boot() {
     const provider = chosenProvider();
     $('connection-note').classList.toggle('ready', ready());
     $('connection-note').classList.toggle('error', !!provider && !ready());
-    $('connection-message').textContent = providerStatusText(provider, state.provider);
+    $('connection-message').textContent = providerStatusText(provider, state.provider, state.data.providers);
     updateControls();
   }
   async function refresh() {
@@ -272,6 +290,13 @@ function boot() {
   }
   function applyState(data) {
     state.data = { docs: [], edges: [], providers: [], ...data };
+    if (!initialProviderChosen) {
+      state.provider = chooseInitialProvider(preferredProvider, state.data.providers);
+      $('provider').value = state.provider;
+      initialProviderChosen = true;
+    }
+    $('import-preparation').textContent = importPreparationText(state.data.importCapabilities);
+    $('wiki-root-location').textContent = typeof state.data.wikiRoot === 'string' ? `자료 저장 위치: ${state.data.wikiRoot}` : '';
     state.data.docs = state.data.docs.map(doc => ({ related: [], sources: [], markdown: '', summary: '', ...doc }));
     state.docs = new Map(state.data.docs.map(doc => [doc.id, doc]));
     if (!state.docs.has(state.selected)) {
@@ -499,7 +524,7 @@ function boot() {
   $('question').addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); $('question-form').requestSubmit(); } });
   $('question-form').addEventListener('submit', event => { event.preventDefault(); const question = $('question').value.trim(); if (question) ask(question, question === state.pendingQuestion); });
   $('new-chat').addEventListener('click', () => { state.chats.set(state.provider, { messages: [], conversationId: null, suggestions: [] }); state.pendingQuestion = null; $('question').value = ''; $('operation-error').hidden = true; renderMessages(); updateControls(); toast('새 대화를 시작했어요. 위키 자료는 그대로 있어요.'); });
-  $('provider').addEventListener('change', () => { state.provider = $('provider').value; state.pendingQuestion = null; try { localStorage.setItem('wiki-provider', state.provider); } catch {} $('operation-error').hidden = true; renderMessages(); connectionStatus(); });
+  $('provider').addEventListener('change', () => { state.provider = $('provider').value; initialProviderChosen = true; state.pendingQuestion = null; try { localStorage.setItem('wiki-provider', state.provider); } catch {} $('operation-error').hidden = true; renderMessages(); connectionStatus(); });
   $('add-files').addEventListener('click', () => $('file-input').click());
   $('file-input').addEventListener('change', () => importFiles([...$('file-input').files]));
   $('cancel').addEventListener('click', () => state.abort?.abort());

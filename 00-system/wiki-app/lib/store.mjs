@@ -1,7 +1,7 @@
 import { lstat, mkdir, readFile, readdir, realpath, rename, unlink, writeFile } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
 import { basename, dirname, extname, isAbsolute, join, posix, resolve, sep } from 'node:path';
-import { spawn } from 'node:child_process';
+import { createImportTools } from './import-tools.mjs';
 
 const MAX_FILE = 10 * 1024 * 1024;
 const MAX_ARTICLE = 1024 * 1024;
@@ -127,25 +127,18 @@ function htmlText(html) {
       return entities[entity.toLowerCase()] || '';
     }).replace(/[ \t]+/g, ' ').replace(/\n[ \t]+/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
-function runExtractor(command, args, { max = MAX_FILE, timeout = 30_000 } = {}) {
-  return new Promise((accept, reject) => {
-    const child = spawn(command, args, { shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
-    const chunks = []; let count = 0; let stderr = ''; let done = false;
-    const finish = (error, value) => { if (done) return; done = true; clearTimeout(timer); error ? reject(error) : accept(value); };
-    const timer = setTimeout(() => { child.kill('SIGKILL'); finish(new Error('문서에서 텍스트를 추출하는 시간이 초과됐습니다.')); }, timeout);
-    child.on('error', (error) => finish(new Error(error.code === 'ENOENT' ? `${command}가 설치되지 않아 문서를 읽을 수 없습니다.` : '문서 추출 프로그램을 실행하지 못했습니다.')));
-    child.stdout.on('data', (chunk) => { count += chunk.length; if (count > max) { child.kill('SIGKILL'); finish(new Error('추출한 텍스트가 10MB를 넘어 읽기를 중단했습니다.')); } else chunks.push(chunk); });
-    child.stderr.on('data', (chunk) => { if (stderr.length < 2000) stderr += chunk.toString(); });
-    child.on('close', (code) => finish(code === 0 ? null : new Error('문서의 텍스트를 읽지 못했습니다. 텍스트가 있는 PDF 또는 Markdown 파일로 다시 추가해주세요.'), Buffer.concat(chunks).toString('utf8')));
-  });
-}
 
 export class WikiStore {
-  constructor(root) {
+  constructor(root, { importTools = createImportTools() } = {}) {
     if (typeof root !== 'string' || !root.trim()) fail('위키 폴더를 지정해주세요.');
     this.root = resolve(root);
+    this.importTools = importTools;
     this._pending = Promise.resolve();
     this._initialized = false;
+  }
+
+  async getImportCapabilities() {
+    return this.importTools.getImportCapabilities({ refresh: true });
   }
 
   async init() {
@@ -281,11 +274,8 @@ export class WikiStore {
           if (TEXT_EXTENSIONS.has(extension)) {
             text = decodeText(bytes);
             if (extension === '.html' || extension === '.htm') text = htmlText(text);
-          } else if (extension === '.pdf') {
-            text = await runExtractor('pdftotext', ['-layout', '-enc', 'UTF-8', join(this.root, originalId), '-']);
-          } else if (extension === '.docx') {
-            const script = 'import sys,zipfile,xml.etree.ElementTree as E\nz=zipfile.ZipFile(sys.argv[1])\ni=z.getinfo("word/document.xml")\nif i.file_size>10485760: raise ValueError("document too large")\nr=E.fromstring(z.read(i))\nprint("\\n".join("".join(p.itertext()) for p in r.iter("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p")))';
-            text = await runExtractor('python3', ['-c', script, join(this.root, originalId)]);
+          } else if (extension === '.pdf' || extension === '.docx') {
+            text = await this.importTools.extract(extension.slice(1), join(this.root, originalId));
           } else fail('지원하는 파일은 Markdown, TXT, CSV, JSON, HTML, PDF, DOCX입니다.');
           if (!text.trim()) fail('읽을 수 있는 텍스트가 없습니다. 스캔한 문서는 텍스트로 변환해 다시 추가해주세요.');
         } catch (error) { warnings.push(`${name}: ${error.message} 원본은 보관했습니다.`); continue; }

@@ -39,8 +39,9 @@ async function executable(candidate) {
 }
 
 async function resolveExecutable(provider, { env }) {
-  const extensions = process.platform === 'win32' ? ['.exe', ''] : [''];
-  for (const directory of (env.PATH || env.Path || '').split(path.delimiter).filter(Boolean)) {
+  const extensions = process.platform === 'win32' ? ['.exe'] : [''];
+  const directories = (env.PATH || env.Path || '').split(path.delimiter).map(value => value.replace(/^"(.*)"$/, '$1')).filter(Boolean);
+  for (const directory of directories) {
     for (const suffix of extensions) {
       const candidate = path.join(directory, provider + suffix);
       if (await executable(candidate)) return candidate;
@@ -60,11 +61,14 @@ async function resolveExecutable(provider, { env }) {
   for (const candidate of candidates) if (await executable(candidate)) return candidate;
   // npm's Windows .cmd shim requires a command shell. Resolve its actual JS
   // entry point instead, keeping user text on stdin and shell:false everywhere.
-  if (process.platform === 'win32' && env.APPDATA) {
-    const entry = provider === 'codex'
-      ? path.join(env.APPDATA, 'npm', 'node_modules', '@openai', 'codex', 'bin', 'codex.js')
-      : path.join(env.APPDATA, 'npm', 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
-    try { await access(entry); return { command: process.execPath, args: [entry] }; } catch { /* Not installed here. */ }
+  if (process.platform === 'win32') {
+    const prefixes = new Set([...directories, ...(env.APPDATA ? [path.join(env.APPDATA, 'npm')] : [])]);
+    for (const prefix of prefixes) {
+      const entry = provider === 'codex'
+        ? path.join(prefix, 'node_modules', '@openai', 'codex', 'bin', 'codex.js')
+        : path.join(prefix, 'node_modules', '@anthropic-ai', 'claude-code', 'cli.js');
+      try { await access(entry); return { command: process.execPath, args: [entry] }; } catch { /* Not installed here. */ }
+    }
   }
   return null;
 }

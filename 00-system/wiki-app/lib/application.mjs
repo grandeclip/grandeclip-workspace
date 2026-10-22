@@ -27,7 +27,7 @@ async function saveChat(root,chat){const dir=await ensureStateDirectory(root),fi
 export function createApplication({store,providers,skillText,articleTemplate='',publicDir}){
  const cookieName='gc_wiki_session',sessionSecret=randomBytes(32).toString('hex'),csrfToken=randomBytes(24).toString('hex');let busy=false;
  const parse=providers.parseJsonResult||JSON.parse;
- async function state(){return {...await store.getData(),providers:await Promise.all(['codex','claude'].map(id=>providers.providerStatus(id,{cwd:store.root}))),csrfToken,busy};}
+ async function state(){return {...await store.getData(),wikiRoot:store.root,importCapabilities:store.getImportCapabilities?await store.getImportCapabilities():undefined,providers:await Promise.all(['codex','claude'].map(id=>providers.providerStatus(id,{cwd:store.root}))),csrfToken,busy};}
  function stream(request,work){
   if(busy)return json({error:'진행 중인 작업이 끝나면 다시 요청해주세요.'},409);
   busy=true;const encoder=new TextEncoder(),abort=new AbortController();let finished=false;
