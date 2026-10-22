@@ -4,7 +4,7 @@ Claude Code·Codex에서 업무와 수업 실습에 사용하는 폴더입니다
 
 ## 초기 설정을 요청받았을 때
 
-- `README.md`의 **AI 초기 설정 절차**를 읽고 현재 도구·OS에 맞는 수업용 설정만 수행합니다. 현재 Codex라면 `--workshop --tool codex` 또는 PowerShell의 `-Workshop -Tool Codex` 경로를 사용합니다.
+- Codex의 `$setup-workspace`는 ZIP에 포함된 `.agents/skills/setup-workspace/SKILL.md`를 사용합니다. `README.md`의 **AI 초기 설정 절차**를 읽고 현재 도구·OS에 맞는 수업용 설정만 수행합니다. 현재 Codex라면 `--workshop --tool codex` 또는 PowerShell의 `-Workshop -Tool Codex` 경로를 사용합니다.
 - `career-os`와 `karpathy-llm-wiki`는 작업 폴더의 `.agents/skills/`에 각각 전체 묶음으로 준비합니다. `skill-creator`는 Codex의 기본 내장 스킬을 사용하며 Claude용 사본으로 덮지 않습니다.
 - `.agents` 쓰기가 도구의 보호 정책에 막히면 설치 명령에 한정해 정식 승인 절차를 따릅니다. 전역 보안 설정을 바꾸지 않고, 승인받을 수 없으면 사용자가 실행할 명령을 안내합니다.
 - 파일 준비와 실제 스킬 인식을 구분합니다. 프로젝트에서 실제 로드된 경로를 먼저 확인하며 사용자 공용 폴더의 동명 스킬을 우선하지 않습니다. 새 대화에서 확인할 때는 사용 가능한 스킬 목록의 실제 경로와 지침을 읽고, 없는 기능은 준비됐다고 말하지 않습니다.

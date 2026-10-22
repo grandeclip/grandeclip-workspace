@@ -19,7 +19,7 @@
 .pytest_cache/
 __pycache__/
 
-# 수업용 초기 설정이 이 폴더에 준비하는 Codex 스킬 사본
+# setup-workspace 진입 스킬은 추적하며, 초기 설정으로 복사한 Codex 스킬만 제외
 .agents/skills/career-os/
 
 # 수업용 개인 위키와 Codex 스킬 사본

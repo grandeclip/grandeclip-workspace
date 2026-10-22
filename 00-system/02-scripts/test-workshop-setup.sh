@@ -40,7 +40,10 @@ def snapshot(root):
             content = ('file', hashlib.sha256(path.read_bytes()).hexdigest())
         else:
             content = ('dir',)
-        result[key] = (content, stat.S_IMODE(info.st_mode), info.st_mtime_ns)
+        # 자식 묶음을 추가·정리하면 기존 부모 디렉터리의 mtime은 바뀐다.
+        # 파일·링크의 메타데이터와 전체 경로·내용·권한은 계속 비교한다.
+        modified = None if content[0] == 'dir' else info.st_mtime_ns
+        result[key] = (content, stat.S_IMODE(info.st_mode), modified)
     return result
 
 
@@ -67,6 +70,9 @@ def fixture(label):
         shutil.copytree(repo / '00-system/wiki-app', workspace / '00-system/wiki-app')
         (workspace / '.claude/commands').mkdir()
         (workspace / '.claude/commands/setup-workspace.md').write_text('fixture command\n')
+        bootstrap = workspace / '.agents/skills/setup-workspace'
+        bootstrap.mkdir(parents=True)
+        (bootstrap / 'SKILL.md').write_text('---\nname: setup-workspace\ndescription: Prepare this workshop.\n---\nRead README.md and prepare Codex workshop files.\n')
         (workspace / 'CLAUDE.md').write_text('personal Claude settings\n')
         (workspace / 'AGENTS.md').write_text('personal Codex settings\n')
         (workspace / '.claude/skills/unrelated').mkdir()
@@ -144,7 +150,8 @@ def test_fresh_claude(backend):
         before = snapshot(workspace)
         expect(run(workspace, environment, ['--workshop', '--tool', 'claude', '--yes'], backend), text='skill-creator')
         assert snapshot(workspace) == before
-        assert not (workspace / '.agents').exists()
+        assert not (workspace / '.agents/skills/career-os').exists()
+        assert not (workspace / '.agents/skills/karpathy-llm-wiki').exists()
         assert_offline(log)
 
 
@@ -188,7 +195,8 @@ def test_missing_source(backend):
             before = snapshot(workspace)
             expect(run(workspace, environment, ['--workshop', '--tool', tool], backend), False, relative)
             assert snapshot(workspace) == before
-            assert not (workspace / '.agents').exists()
+            assert not (workspace / '.agents/skills/career-os').exists()
+            assert not (workspace / '.agents/skills/karpathy-llm-wiki').exists()
             assert_offline(log)
 
 
@@ -223,6 +231,8 @@ def test_symlink_block(backend):
             outside.mkdir()
             (outside / 'sentinel').write_text('outside unchanged\n')
             link = workspace / relative
+            if link.is_dir():
+                shutil.rmtree(link)
             link.parent.mkdir(parents=True, exist_ok=True)
             link.symlink_to(outside, target_is_directory=True)
             before, external_before = snapshot(workspace), snapshot(outside)
@@ -230,6 +240,46 @@ def test_symlink_block(backend):
             assert snapshot(workspace) == before
             assert snapshot(outside) == external_before
             assert_offline(log)
+
+
+def test_bootstrap_missing_or_invalid(backend):
+    for invalid in ('missing', 'directory', 'file link', 'directory link'):
+        for check_only in (False, True):
+            with fixture('invalid setup skill') as (workspace, fixture_root, _, log, environment):
+                bootstrap = workspace / '.agents/skills/setup-workspace'
+                entry = bootstrap / 'SKILL.md'
+                external = fixture_root / 'outside-setup'
+                external.mkdir()
+                (external / 'SKILL.md').write_text('outside remains unchanged\n')
+                if invalid == 'directory link':
+                    shutil.rmtree(bootstrap)
+                    bootstrap.symlink_to(external, target_is_directory=True)
+                else:
+                    entry.unlink()
+                    if invalid == 'directory':
+                        entry.mkdir()
+                    elif invalid == 'file link':
+                        entry.symlink_to(external / 'SKILL.md')
+                before, external_before = snapshot(workspace), snapshot(external)
+                arguments = ['--workshop', '--tool', 'codex']
+                if check_only:
+                    arguments.append('--check')
+                expect(run(workspace, environment, arguments, backend), False, 'setup-workspace')
+                assert snapshot(workspace) == before
+                assert snapshot(external) == external_before
+                assert_offline(log)
+
+
+def test_bootstrap_personal_contents_preserved(backend):
+    with fixture('personal setup skill') as (workspace, _, _, log, environment):
+        bootstrap = workspace / '.agents/skills/setup-workspace/SKILL.md'
+        bootstrap.write_text('---\nname: setup-workspace\ndescription: Personal setup.\n---\nKeep my setup rules.\n')
+        before = snapshot(workspace)
+        expect(run(workspace, environment, ['--workshop', '--tool', 'codex'], backend))
+        after = snapshot(workspace)
+        for path, value in before.items():
+            assert after[path] == value, path
+        assert_offline(log)
 
 
 def test_arguments(backend):
@@ -375,6 +425,8 @@ cases = [
     ('identical rerun and ready --check write nothing', test_rerun_and_ready_check),
     ('missing --check writes nothing', test_missing_check),
     ('missing source fails before mutation', test_missing_source),
+    ('missing or linked setup skill fails before writes', test_bootstrap_missing_or_invalid),
+    ('personal setup skill survives preparation unchanged', test_bootstrap_personal_contents_preserved),
     ('personal destination conflict preserves bytes', test_personal_conflict),
     ('wiki conflict preflight preserves career and personal wiki', test_wiki_conflict),
     ('missing app fails before mutation', test_missing_app),

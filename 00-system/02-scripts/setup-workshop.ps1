@@ -86,7 +86,7 @@ function Write-RuntimeStatus {
 }
 function Write-Ready {
   if ($Tool -eq 'Claude') { Write-Host '파일 준비 확인: .claude/skills/career-os, .claude/skills/karpathy-llm-wiki, .claude/skills/skill-creator' }
-  else { Write-Host '파일 준비 확인: .agents/skills/career-os, .agents/skills/karpathy-llm-wiki' }
+  else { Write-Host '파일 준비 확인: .agents/skills/setup-workspace, .agents/skills/career-os, .agents/skills/karpathy-llm-wiki' }
   Write-Host '위키 앱 파일 준비 확인: 00-system/wiki-app/'
   Write-Host "다음: 같은 폴더의 새 $Tool 대화에서 career-os, karpathy-llm-wiki, skill-creator의 실제 인식을 확인해 주세요."
   Write-RuntimeStatus
@@ -122,6 +122,12 @@ try {
   if ($Tool -eq 'Claude') { Read-Bundle $creator $creator $false; Write-Ready; exit 0 }
   Assert-Directory $Agents
   Assert-Directory $Skills
+  $bootstrap = Join-Path $Skills 'setup-workspace'
+  Assert-Directory $bootstrap
+  $bootstrapEntry = Join-Path $bootstrap 'SKILL.md'
+  $entry = Get-Entry $bootstrapEntry
+  if ($null -eq $entry -or $entry.PSIsContainer -or ($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw "누락 또는 읽기 불가: $bootstrapEntry" }
+  $null = Get-FileHash -LiteralPath $bootstrapEntry -Algorithm SHA256 -ErrorAction Stop
   $pending = New-Object 'System.Collections.Generic.List[string]'
   foreach ($bundle in $Bundles) {
     Set-Bundle $bundle

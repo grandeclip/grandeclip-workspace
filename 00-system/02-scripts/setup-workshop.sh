@@ -68,7 +68,7 @@ runtime_status() {
 }
 ready() {
   if [ "$TOOL" = claude ]; then printf '%s\n' '파일 준비 확인: .claude/skills/career-os, .claude/skills/karpathy-llm-wiki, .claude/skills/skill-creator';
-  else printf '%s\n' '파일 준비 확인: .agents/skills/career-os, .agents/skills/karpathy-llm-wiki'; fi
+  else printf '%s\n' '파일 준비 확인: .agents/skills/setup-workspace, .agents/skills/career-os, .agents/skills/karpathy-llm-wiki'; fi
   printf '%s\n' '위키 앱 파일 준비 확인: 00-system/wiki-app/'
   printf '다음: 같은 폴더의 새 %s 대화에서 career-os, karpathy-llm-wiki, skill-creator의 실제 인식을 확인해 주세요.\n' "$TOOL"
   runtime_status
@@ -92,6 +92,13 @@ compare_bundle() {
   done
 }
 check_directory "$AGENTS"; check_directory "$SKILLS"
+BOOTSTRAP="$SKILLS/setup-workspace"
+check_directory "$BOOTSTRAP"
+BOOTSTRAP_ENTRY="$BOOTSTRAP/SKILL.md"
+if [ -L "$BOOTSTRAP_ENTRY" ] || [ ! -f "$BOOTSTRAP_ENTRY" ] || [ ! -r "$BOOTSTRAP_ENTRY" ]; then
+  fail "누락 또는 읽기 불가: $BOOTSTRAP_ENTRY"
+fi
+cat "$BOOTSTRAP_ENTRY" >/dev/null || fail "초기 설정 스킬을 읽을 수 없습니다: $BOOTSTRAP_ENTRY"
 PENDING=()
 for bundle in "${BUNDLES[@]}"; do
   set_bundle "$bundle"; DEST="$SKILLS/$bundle"; check_directory "$DEST"
